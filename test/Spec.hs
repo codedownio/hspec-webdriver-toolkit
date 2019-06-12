@@ -1,19 +1,27 @@
 {-# LANGUAGE NamedFieldPuns, RecordWildCards, QuasiQuotes, ScopedTypeVariables #-}
 
-import Binaries
 import Control.Concurrent
 import Control.Exception
 import Control.Monad
 import Data.Default
 import Data.String.Interpolate.IsString
-import Lib
+import Data.Time.Clock
+import Data.Time.Format
+import System.Directory
+import System.FilePath
+import System.IO.Temp
 import Test.Hspec
 import Test.Hspec.Core.Spec
+import Test.Hspec.WebDriver.Simple.Binaries
+import Test.Hspec.WebDriver.Simple.Lib
+import Test.Hspec.WebDriver.Simple.Screenshots
+import Test.Hspec.WebDriver.Simple.Types
+import Test.Hspec.WebDriver.Simple.Util
+import Test.Hspec.WebDriver.Simple.Wrap
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W
 import Test.WebDriver.Commands
 import qualified Test.WebDriver.Config as W
-import Wrap
 
 type SpecType = SpecWith WdSessionWithLabels
 
@@ -42,19 +50,24 @@ tests = describe "Basic widget tests" $ beforeWith beforeAction $ after afterAct
 
 main :: IO ()
 main = do
-  sessionMap <- newMVar []
+  let testRoot = "/tmp/testroot"
+  let runsRoot = testRoot </> "test_runs"
+  createDirectoryIfMissing True runsRoot
+  runRoot <- getTestFolder' runsRoot
+  putStrLn [i|\n********** Test root: #{testRoot} **********|]
 
-  let wdOptions = def
-  let caps = W.defaultCaps { W.browser = W.chrome }
+  let wdOptions = def { testRoot = testRoot
+                      , runRoot = runRoot }
 
-  withWebDriver "/tmp/testroot" Nothing $ \baseConfig -> do
-    let wdConfig = baseConfig { W.wdCapabilities = caps }
-    let sess = WdSession wdOptions sessionMap wdConfig
-    let initialSessionWithLabels = WdSessionWithLabels [] sess
+  withWebDriver wdOptions $ \baseConfig logSavingHooks -> do
+    initialSessionWithLabels <- makeInitialSessionWithLabels wdOptions baseConfig $ W.defaultCaps { W.browser = W.chrome }
 
     hspec $ beforeAll (return initialSessionWithLabels) $
       afterAll closeAllSessions $
       addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
+      beforeWith (\x -> saveScreenshots "before" x >> return x) $
+      after (saveScreenshots "after") $
+      logSavingHooks $
       tests
 
 
@@ -65,3 +78,10 @@ closeAllSessions (WdSessionWithLabels {wdSession=(WdSession {wdSessionMap})}) = 
     putStrLn [i|Closing session '#{name}'|]
     catch (W.runWD sess closeSession)
           (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': #{e}|])
+
+
+makeInitialSessionWithLabels wdOptions baseConfig caps = do
+  let wdConfig = baseConfig { W.wdCapabilities = caps }
+  failureCounter <- newMVar 0
+  sess <- WdSession <$> (pure wdOptions) <*> (newMVar []) <*> (newMVar 0) <*> (pure wdConfig)
+  return $ WdSessionWithLabels [] sess

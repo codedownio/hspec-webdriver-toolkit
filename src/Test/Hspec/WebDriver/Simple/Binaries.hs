@@ -1,7 +1,6 @@
-{-# OPTIONS_GHC -fno-warn-type-defaults #-}
-{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns #-}
 
-module Binaries where
+module Test.Hspec.WebDriver.Simple.Binaries where
 
 import Control.Concurrent
 import qualified Control.Exception.Lifted as E
@@ -11,13 +10,15 @@ import qualified Data.List as L
 import Data.Maybe
 import Data.String.Interpolate.IsString
 import Network.Socket (PortNumber)
-import Ports
 import System.Directory
 import System.FilePath
 import System.IO
 import System.IO.Temp
 import System.Process
 import qualified Test.Hspec as H
+import Test.Hspec.WebDriver.Simple.Ports
+import Test.Hspec.WebDriver.Simple.Types
+import Test.Hspec.WebDriver.Simple.Util
 import qualified Test.WebDriver.Config as W
 
 seleniumErrFileName, seleniumOutFileName :: String
@@ -59,19 +60,22 @@ webdriverCreateProcess toolsDir port =
 
 -- | Spin up a Selenium WebDriver and perform a callback while it's running.
 -- Shut it down afterwards.
-withWebDriver :: FilePath -> Maybe FilePath -> (W.WDConfig -> IO a) -> IO a
-withWebDriver testRoot maybeToolsDir action = do
+withWebDriver :: WdOptions -> (W.WDConfig -> Hooks -> IO a) -> IO a
+withWebDriver (WdOptions {testRoot, toolsDir=maybeToolsDir, runRoot}) action = do
+
   createDirectoryIfMissing True testRoot
 
   port <- findFreePortOrException
 
-  chromeDataDir <- createTempDirectory testRoot "chromedata"
+  putStrLn [i|Starting selenium server on port: #{port}|]
 
   let toolsDir = fromMaybe (testRoot </> "test_tools") maybeToolsDir
   createDirectoryIfMissing True toolsDir
   ensureSeleniumBinariesPresent toolsDir
 
-  let logsDir = testRoot </> "selenium_logs"
+  chromeDataDir <- createTempDirectory runRoot "chromedata"
+
+  let logsDir = runRoot </> "selenium_logs"
   createDirectoryIfMissing True logsDir
   let outFilePath = logsDir </> seleniumOutFileName
   let errFilePath =  logsDir </> seleniumErrFileName
@@ -79,17 +83,26 @@ withWebDriver testRoot maybeToolsDir action = do
   -- Selenium log collection is disabled for now since it's rarely useful
   (withFile outFilePath AppendMode) $ \hout ->
     (withFile errFilePath AppendMode) $ \herr -> do
+
+      let hooks = H.after $ \sessionWithLabels -> do
+            let resultsDir = getResultsDir sessionWithLabels
+            createDirectoryIfMissing True resultsDir
+            moveAndTruncate outFilePath (resultsDir </> seleniumOutFileName)
+            moveAndTruncate errFilePath (resultsDir </> seleniumErrFileName)
+
       E.bracket (do
-                     p@(_, _, _, _) <- createProcess $ (webdriverCreateProcess toolsDir port) { std_in = Inherit
-                                                                                              , std_out = UseHandle hout
-                                                                                              , std_err = UseHandle herr }
+                     p@(_, _, _, _) <- createProcess $ (webdriverCreateProcess toolsDir port) {
+                       std_in = Inherit
+                       , std_out = UseHandle hout
+                       , std_err = UseHandle herr
+                       }
 
                      withFile errFilePath ReadMode $ flip waitForMessage "Selenium Server is up and running"
 
                      return p
                 )
                 (\(_, _, _, h) -> terminateProcess h >> waitForProcess h)
-                (const $ action $ def { W.wdPort = fromIntegral port } )
+                (const $ action (def { W.wdPort = fromIntegral port }) hooks)
 
 
 waitForMessage :: Handle -> String -> IO ()

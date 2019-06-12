@@ -1,6 +1,6 @@
-{-# LANGUAGE TypeFamilies, InstanceSigs, RecordWildCards, ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies, InstanceSigs, RecordWildCards, ScopedTypeVariables, QuasiQuotes, LambdaCase #-}
 
-module Lib where
+module Test.Hspec.WebDriver.Simple.Lib where
 
 import Control.Concurrent.MVar
 import Control.Exception
@@ -9,32 +9,14 @@ import Control.Monad.Trans.Except
 import Data.Default
 import Data.Either
 import qualified Data.List as L
+import Data.String.Interpolate.IsString
 import GHC.Stack
 import Test.Hspec.Core.Spec
+import Test.Hspec.WebDriver.Simple.Exceptions
+import Test.Hspec.WebDriver.Simple.Types
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Config as W
 import qualified Test.WebDriver.Session as W
-
-type Browser = String
-
-newtype WdOptions = WdOptions {
-  -- Whether to skip the rest of the tests once one fails
-  skipRemainingTestsAfterFailure :: Bool
-  }
-
-instance Default WdOptions where
-  def = WdOptions True
-
-data WdSession = WdSession { wdOptions :: WdOptions
-                           , wdSessionMap :: MVar [(Browser, W.WDSession)]
-                           , wdConfig :: W.WDConfig }
-
-data WdSessionWithLabels = WdSessionWithLabels { wdLabels :: [String]
-                                               , wdSession :: WdSession }
-
-data WdExample = WdExample { wdBrowser :: Browser
-                           , wdAction :: W.WD () }
-               | WdPending { wdPendingMsg :: Maybe String }
 
 instance Example WdExample where
   type Arg WdExample = WdSessionWithLabels
@@ -44,7 +26,7 @@ instance Example WdExample where
   evaluateExample (WdExample browser action) _ act _ = do
     resultVar <- newEmptyMVar
 
-    act $ \(WdSessionWithLabels {wdSession=(WdSession {..}), ..}) -> do
+    act $ \sessionWithLabels@(WdSessionWithLabels {wdSession=(WdSession {..}), ..}) -> do
       eitherResult :: Either Result () <- runExceptT $ do
 
         -- Create new session if necessary
@@ -52,20 +34,23 @@ instance Example WdExample where
           Just sess -> return (sessionMap, Right sess)
           Nothing -> handle (\(e :: SomeException) -> return $ (sessionMap, Left $ Result "Exception while creating WebDriver session" (Failure Nothing (Error Nothing e))))
                             (do
-                                sess <- W.mkSession wdConfig
-                                W.runWD sess $ W.createSession $ W.wdCapabilities wdConfig
+                                sess' <- W.mkSession wdConfig
+                                sess <- W.runWD sess' $ W.createSession $ W.wdCapabilities wdConfig
                                 return ((browser, sess):sessionMap, Right sess)
                             )
 
-        liftIO $ W.runWD sess action
+        liftIO $ putStrLn [i|Got session to run command: #{W.wdSessId sess}|]
+
+        (liftIO (try $ W.runWD sess action)) >>= \case
+          Left e -> liftIO $ do
+            handleTestException sessionWithLabels e
+            throw e -- Rethrow for the test framework to handle
+          Right () -> return ()
 
       putMVar resultVar (fromLeft (Result "" Success) eitherResult)
 
     takeMVar resultVar
 
-
-failureOnException :: IO Result -> IO Result
-failureOnException action = catch action (\(e :: SomeException) -> return $ Result "Exception while evaluating example" (Failure Nothing (Error Nothing e)))
 
 runWithBrowser :: Browser -> W.WD () -> WdExample
 runWithBrowser browser action = WdExample browser action
