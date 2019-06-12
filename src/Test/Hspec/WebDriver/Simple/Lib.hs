@@ -1,9 +1,10 @@
-{-# LANGUAGE TypeFamilies, InstanceSigs, RecordWildCards, ScopedTypeVariables, QuasiQuotes, LambdaCase #-}
+{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes, LambdaCase #-}
 
 module Test.Hspec.WebDriver.Simple.Lib where
 
 import Control.Concurrent.MVar
 import Control.Exception
+import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
 import Data.Default
@@ -39,8 +40,6 @@ instance Example WdExample where
                                 return ((browser, sess):sessionMap, Right sess)
                             )
 
-        liftIO $ putStrLn [i|Got session to run command: #{W.wdSessId sess}|]
-
         (liftIO (try $ W.runWD sess action)) >>= \case
           Left e -> liftIO $ do
             handleTestException sessionWithLabels e
@@ -54,3 +53,17 @@ instance Example WdExample where
 
 runWithBrowser :: Browser -> W.WD () -> WdExample
 runWithBrowser browser action = WdExample browser action
+
+closeAllSessions :: WdSessionWithLabels -> IO ()
+closeAllSessions (WdSessionWithLabels {wdSession=(WdSession {wdSessionMap})}) = do
+  sessionMap <- readMVar wdSessionMap
+  forM_ sessionMap $ \(name, sess) -> do
+    putStrLn [i|Closing session '#{name}'|]
+    catch (W.runWD sess W.closeSession)
+          (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': #{e}|])
+
+makeInitialSessionWithLabels wdOptions baseConfig caps = do
+  let wdConfig = baseConfig { W.wdCapabilities = caps }
+  failureCounter <- newMVar 0
+  sess <- WdSession <$> (pure wdOptions) <*> (newMVar []) <*> (newMVar 0) <*> (pure wdConfig)
+  return $ WdSessionWithLabels [] sess

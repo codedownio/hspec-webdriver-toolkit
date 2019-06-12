@@ -44,9 +44,7 @@ recordEntireVideoHook = undefined
 
 withIndividualVideosHooks :: (HasCallStack) => Hooks
 withIndividualVideosHooks = aroundWith $ \action -> \session@(WdSessionWithLabels {wdLabels, wdSession=(WdSession {wdOptions=(WdOptions {runRoot})})}) -> do
-  let path = getResultsDir session
-  putStrLn [i|Want to store individual videos here: #{path}|]
-  E.bracket (startFullScreenVideoRecording (runRoot </> "video") True)
+  E.bracket (startFullScreenVideoRecording (getResultsDir session </> "video") True)
             (endVideoRecording)
             (const $ action session)
 
@@ -126,7 +124,8 @@ endVideoRecording (outfile, errfile, h) = liftIO $ do
 
   waitForProcess h >>= \case
     ExitSuccess -> return ()
-    ExitFailure n -> putStrLn [i|Error: ffmpeg exited with nonzero exit code #{n}'|]
+    ExitFailure n -> return ()
+    -- ExitFailure n -> putStrLn [i|Error: ffmpeg exited with nonzero exit code #{n}'|]
 
 withVideoRecording' :: (MonadIO m, MonadBaseControl IO m) => FilePath -> Bool -> (Word, Word, Int, Int) -> m a -> m a
 withVideoRecording' path isTest dimensions action = E.bracket (startVideoRecording path dimensions isTest)

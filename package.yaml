@@ -43,6 +43,15 @@ dependencies:
 - webdriver
 - X11
 
+default-extensions:
+- OverloadedStrings
+- QuasiQuotes
+- NamedFieldPuns
+- RecordWildCards
+- ScopedTypeVariables
+- FlexibleContexts
+- FlexibleInstances
+
 library:
   source-dirs: src
 

@@ -70,17 +70,3 @@ main = do
       withIndividualVideosHooks $
       logSavingHooks $
       tests
-
-closeAllSessions :: WdSessionWithLabels -> IO ()
-closeAllSessions (WdSessionWithLabels {wdSession=(WdSession {wdSessionMap})}) = do
-  sessionMap <- readMVar wdSessionMap
-  forM_ sessionMap $ \(name, sess) -> do
-    putStrLn [i|Closing session '#{name}'|]
-    catch (W.runWD sess closeSession)
-          (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': #{e}|])
-
-makeInitialSessionWithLabels wdOptions baseConfig caps = do
-  let wdConfig = baseConfig { W.wdCapabilities = caps }
-  failureCounter <- newMVar 0
-  sess <- WdSession <$> (pure wdOptions) <*> (newMVar []) <*> (newMVar 0) <*> (pure wdConfig)
-  return $ WdSessionWithLabels [] sess
