@@ -17,6 +17,7 @@ import Test.Hspec.WebDriver.Simple.Lib
 import Test.Hspec.WebDriver.Simple.Screenshots
 import Test.Hspec.WebDriver.Simple.Types
 import Test.Hspec.WebDriver.Simple.Util
+import Test.Hspec.WebDriver.Simple.Video
 import Test.Hspec.WebDriver.Simple.Wrap
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W
@@ -65,11 +66,10 @@ main = do
     hspec $ beforeAll (return initialSessionWithLabels) $
       afterAll closeAllSessions $
       addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
-      beforeWith (\x -> saveScreenshots "before" x >> return x) $
-      after (saveScreenshots "after") $
+      screenshotHooks $
+      withIndividualVideosHooks $
       logSavingHooks $
       tests
-
 
 closeAllSessions :: WdSessionWithLabels -> IO ()
 closeAllSessions (WdSessionWithLabels {wdSession=(WdSession {wdSessionMap})}) = do
@@ -78,7 +78,6 @@ closeAllSessions (WdSessionWithLabels {wdSession=(WdSession {wdSessionMap})}) = 
     putStrLn [i|Closing session '#{name}'|]
     catch (W.runWD sess closeSession)
           (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': #{e}|])
-
 
 makeInitialSessionWithLabels wdOptions baseConfig caps = do
   let wdConfig = baseConfig { W.wdCapabilities = caps }

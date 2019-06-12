@@ -22,6 +22,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - bytestring
+- convertible
 - data-default
 - directory
 - filepath
@@ -29,15 +30,18 @@ dependencies:
 - hspec-core
 - interpolate
 - lifted-base
+- monad-control
 - network
 - process
 - random
 - retry
 - temporary
+- text
 - time
 - transformers
 - unix
 - webdriver
+- X11
 
 library:
   source-dirs: src

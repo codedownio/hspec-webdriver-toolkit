@@ -17,10 +17,19 @@ import System.Directory
 import System.FilePath
 import System.IO
 import System.Random (randomRIO)
+import Test.Hspec
 import Test.Hspec.WebDriver.Simple.Types
 import Test.Hspec.WebDriver.Simple.Util
 import Test.WebDriver
 import Text.Printf
+
+-- * Hooks
+
+screenshotBeforeHook = beforeWith (\x -> saveScreenshots "before" x >> return x)
+screenshotAfterHook = after (saveScreenshots "after")
+screenshotHooks = screenshotBeforeHook . screenshotAfterHook
+
+-- * Implementation
 
 saveScreenshots screenshotName sessionWithLabels@(WdSessionWithLabels {wdSession=(WdSession {..}), ..}) = do
   let resultsDir = getResultsDir sessionWithLabels
