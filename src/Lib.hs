@@ -7,6 +7,7 @@ import Control.Exception
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
 import Data.Default
+import Data.Either
 import qualified Data.List as L
 import GHC.Stack
 import Test.Hspec.Core.Spec
@@ -58,11 +59,7 @@ instance Example WdExample where
 
         liftIO $ W.runWD sess action
 
-      let result = case eitherResult of
-            Left r -> r
-            Right () -> Result "" Success
-
-      putMVar resultVar result
+      putMVar resultVar (fromLeft (Result "" Success) eitherResult)
 
     takeMVar resultVar
 

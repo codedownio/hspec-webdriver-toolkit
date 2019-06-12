@@ -1,11 +1,15 @@
-{-# LANGUAGE NamedFieldPuns, RecordWildCards #-}
+{-# LANGUAGE NamedFieldPuns, RecordWildCards, QuasiQuotes, ScopedTypeVariables #-}
 
 import Binaries
 import Control.Concurrent
+import Control.Exception
+import Control.Monad
 import Data.Default
+import Data.String.Interpolate.IsString
 import Lib
 import Test.Hspec
 import Test.Hspec.Core.Spec
+import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W
 import Test.WebDriver.Commands
 import qualified Test.WebDriver.Config as W
@@ -18,7 +22,8 @@ beforeAction sess@(WdSessionWithLabels {wdLabels}) = do
   putStrLn $ "beforeAction called with labels: " ++ show wdLabels
   return sess
 
-afterAction (WdSessionWithLabels {wdLabels}) = putStrLn $ "afterAction called with labels: " ++ show wdLabels
+afterAction (WdSessionWithLabels {wdLabels}) = do
+  putStrLn $ "afterAction called with labels: " ++ show wdLabels
 
 tests :: SpecType
 tests = describe "Basic widget tests" $ beforeWith beforeAction $ after afterAction $ do
@@ -42,9 +47,21 @@ main = do
   let wdOptions = def
   let caps = W.defaultCaps { W.browser = W.chrome }
 
-  withWebDriver "/tmp/testroot" $ \baseConfig -> do
+  withWebDriver "/tmp/testroot" Nothing $ \baseConfig -> do
     let wdConfig = baseConfig { W.wdCapabilities = caps }
     let sess = WdSession wdOptions sessionMap wdConfig
     let initialSessionWithLabels = WdSessionWithLabels [] sess
 
-    hspec $ beforeAll (return initialSessionWithLabels) $ addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $ tests
+    hspec $ beforeAll (return initialSessionWithLabels) $
+      afterAll closeAllSessions $
+      addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
+      tests
+
+
+closeAllSessions :: WdSessionWithLabels -> IO ()
+closeAllSessions (WdSessionWithLabels {wdSession=(WdSession {wdSessionMap})}) = do
+  sessionMap <- readMVar wdSessionMap
+  forM_ sessionMap $ \(name, sess) -> do
+    putStrLn [i|Closing session '#{name}'|]
+    catch (W.runWD sess closeSession)
+          (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': #{e}|])
