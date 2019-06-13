@@ -18,28 +18,9 @@ import qualified Test.WebDriver.Capabilities as W
 import Test.WebDriver.Commands
 import qualified Test.WebDriver.Config as W
 
-beforeAction :: WdSession -> IO WdSession
-beforeAction sess@(getLabels -> labels) = do
-  putStrLn $ "beforeAction called with labels: " ++ show labels
-  return sess
-
-afterAction (getLabels -> labels) = do
-  putStrLn $ "afterAction called with labels: " ++ show labels
-
 tests :: SpecType
-tests = describe "Basic widget tests" $ beforeWith beforeAction $ after afterAction $ do
-  describe "Basic editing" $ do
-    it "does the first thing" $ \(getLabels -> labels) -> do
-      putStrLn $ "Doing the first thing: " <> show labels
-
-    it "does the second thing" $ \_ -> do
-      putStrLn "Doing the first thing"
-
-    it "starts a browser" $ runWithBrowser "browser1" $ do
-      openPage "http://www.google.com"
-
-    it "starts another browser" $ runWithBrowser "browser2" $ do
-      openPage "http://www.yahoo.com"
+tests = describe "Tookit tests" $ do
+  it "works" $ \_ -> pending
 
 main :: IO ()
 main = do
