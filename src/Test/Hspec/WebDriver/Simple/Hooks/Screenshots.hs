@@ -1,7 +1,7 @@
 
 {-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, CPP, QuasiQuotes, RecordWildCards #-}
 
-module Test.Hspec.WebDriver.Simple.Screenshots (
+module Test.Hspec.WebDriver.Simple.Hooks.Screenshots (
   screenshotBeforeTest
   , screenshotAfterTest
   , screenshotBeforeAndAfterTest

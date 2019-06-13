@@ -51,3 +51,6 @@ data WdSessionWithLabels = WdSessionWithLabels { wdLabels :: [String]
 data WdExample = WdExample { wdBrowser :: Browser
                            , wdAction :: W.WD () }
                | WdPending { wdPendingMsg :: Maybe String }
+
+getLabels :: WdSessionWithLabels -> [String]
+getLabels (WdSessionWithLabels {wdLabels}) = wdLabels

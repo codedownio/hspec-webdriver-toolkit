@@ -16,7 +16,7 @@ import System.Directory
 import System.FilePath
 import System.IO
 import System.Random (randomRIO)
-import Test.Hspec.WebDriver.Simple.Screenshots
+import Test.Hspec.WebDriver.Simple.Hooks.Screenshots
 import Test.Hspec.WebDriver.Simple.Types
 import Test.Hspec.WebDriver.Simple.Util
 import Test.WebDriver

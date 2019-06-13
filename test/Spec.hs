@@ -1,4 +1,4 @@
-{-# LANGUAGE NamedFieldPuns, RecordWildCards, QuasiQuotes, ScopedTypeVariables #-}
+{-# LANGUAGE NamedFieldPuns, RecordWildCards, QuasiQuotes, ScopedTypeVariables, ViewPatterns #-}
 
 import Control.Concurrent
 import Control.Exception
@@ -12,35 +12,29 @@ import System.FilePath
 import System.IO.Temp
 import Test.Hspec
 import Test.Hspec.Core.Spec
-import Test.Hspec.WebDriver.Simple.Binaries
-import Test.Hspec.WebDriver.Simple.Lib
-import Test.Hspec.WebDriver.Simple.Logs
-import Test.Hspec.WebDriver.Simple.Screenshots
-import Test.Hspec.WebDriver.Simple.Types
 import Test.Hspec.WebDriver.Simple.Util
-import Test.Hspec.WebDriver.Simple.Video
-import Test.Hspec.WebDriver.Simple.Wrap
+import Test.Hspec.WebDriver.Toolkit
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W
 import Test.WebDriver.Commands
 import qualified Test.WebDriver.Config as W
 
 beforeAction :: WdSessionWithLabels -> IO WdSessionWithLabels
-beforeAction sess@(WdSessionWithLabels {wdLabels}) = do
-  putStrLn $ "beforeAction called with labels: " ++ show wdLabels
+beforeAction sess@(getLabels -> labels) = do
+  putStrLn $ "beforeAction called with labels: " ++ show labels
   return sess
 
-afterAction (WdSessionWithLabels {wdLabels}) = do
-  putStrLn $ "afterAction called with labels: " ++ show wdLabels
+afterAction (getLabels -> labels) = do
+  putStrLn $ "afterAction called with labels: " ++ show labels
 
 tests :: SpecType
 tests = describe "Basic widget tests" $ beforeWith beforeAction $ after afterAction $ do
   describe "Basic editing" $ do
-    it "does the first thing" $ \(WdSessionWithLabels {..}) -> do
-      putStrLn $ "Doing the first thing: " <> show wdLabels
+    it "does the first thing" $ \(getLabels -> labels) -> do
+      putStrLn $ "Doing the first thing: " <> show labels
 
-    it "does the second thing" $ \(WdSessionWithLabels {..}) -> do
-      putStrLn $ "Doing the first thing: " <> show wdLabels
+    it "does the second thing" $ \_ -> do
+      putStrLn "Doing the first thing"
 
     it "starts a browser" $ runWithBrowser "browser1" $ do
       openPage "http://www.google.com"
@@ -59,15 +53,4 @@ main = do
   let wdOptions = def { testRoot = testRoot
                       , runRoot = runRoot }
 
-  withWebDriver wdOptions $ \baseConfig webDriverLogSavingHooks -> do
-    initialSessionWithLabels <- makeInitialSessionWithLabels wdOptions baseConfig $ W.defaultCaps { W.browser = W.chrome }
-
-    hspec $ beforeAll (return initialSessionWithLabels) $
-      afterAll closeAllSessions $
-      addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
-      screenshotBeforeAndAfterTest $
-      recordEntireVideo $
-      recordIndividualVideos $
-      webDriverLogSavingHooks $
-      saveBrowserLogs $
-      tests
+  runWebDriver wdOptions (screenshotBeforeAndAfterTest . recordEntireVideo . recordIndividualVideos . saveWebDriverLogs . saveBrowserLogs) tests

@@ -1,10 +1,11 @@
 
 {-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, CPP, QuasiQuotes, RecordWildCards #-}
 
-module Test.Hspec.WebDriver.Simple.Logs (
+module Test.Hspec.WebDriver.Simple.Hooks.Logs (
   saveBrowserLogs
   , failOnSevereBrowserLogs
   , failOnCertainBrowserLogs
+  , saveWebDriverLogs
   ) where
 
 import Control.Concurrent
@@ -44,6 +45,10 @@ failOnSevereBrowserLogs = failOnCertainBrowserLogs predicate
 -- | Fail a test when logs matching a predicate are found.
 failOnCertainBrowserLogs :: (LogEntry -> Bool) -> Hook
 failOnCertainBrowserLogs predicate = undefined
+
+-- | Save the webdriver logs for each test to the results directory.
+saveWebDriverLogs :: Hook
+saveWebDriverLogs = undefined
 
 -- * Implementation
 
