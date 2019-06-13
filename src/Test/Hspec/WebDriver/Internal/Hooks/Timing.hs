@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Test.Hspec.WebDriver.Simple.Hooks.Timing (
+module Test.Hspec.WebDriver.Internal.Hooks.Timing (
   recordTestTiming
   ) where
 
@@ -19,9 +19,9 @@ import Data.Time.Clock.POSIX (getPOSIXTime)
 import GHC.Stack
 import System.FilePath
 import qualified Test.Hspec as H
-import qualified Test.Hspec.WebDriver.Simple.Hooks.Timing.TreeMap as TreeMap
-import Test.Hspec.WebDriver.Simple.Types
-import Test.Hspec.WebDriver.Simple.Util
+import qualified Test.Hspec.WebDriver.Internal.Hooks.Timing.TreeMap as TreeMap
+import Test.Hspec.WebDriver.Internal.Types
+import Test.Hspec.WebDriver.Internal.Util
 
 
 -- * Hooks

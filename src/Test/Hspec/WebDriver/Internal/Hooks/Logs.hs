@@ -1,7 +1,7 @@
 
 {-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, CPP, QuasiQuotes, RecordWildCards #-}
 
-module Test.Hspec.WebDriver.Simple.Hooks.Logs (
+module Test.Hspec.WebDriver.Internal.Hooks.Logs (
   saveBrowserLogs
   , failOnSevereBrowserLogs
   , failOnCertainBrowserLogs
@@ -25,8 +25,8 @@ import System.FilePath
 import System.IO
 import System.Random (randomRIO)
 import Test.Hspec
-import Test.Hspec.WebDriver.Simple.Types
-import Test.Hspec.WebDriver.Simple.Util
+import Test.Hspec.WebDriver.Internal.Types
+import Test.Hspec.WebDriver.Internal.Util
 import Test.WebDriver
 import Text.Printf
 

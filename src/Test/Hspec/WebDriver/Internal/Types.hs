@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies, InstanceSigs, RecordWildCards, ScopedTypeVariables, QuasiQuotes, Rank2Types #-}
 
-module Test.Hspec.WebDriver.Simple.Types where
+module Test.Hspec.WebDriver.Internal.Types where
 
 import Control.Concurrent.MVar
 import Control.Exception

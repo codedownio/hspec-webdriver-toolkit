@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.Hspec.WebDriver.Simple.Hooks.Timing.TreeMap where
+module Test.Hspec.WebDriver.Internal.Hooks.Timing.TreeMap where
 
 import qualified Data.Aeson as A
 import Data.String.Interpolate.IsString

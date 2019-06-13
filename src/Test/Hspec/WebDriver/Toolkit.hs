@@ -34,6 +34,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , runWithBrowser
   , runEveryBrowser
   , closeAllSessions
+  , getTestFolder
 
   -- * Types
   , Hook
@@ -45,24 +46,30 @@ module Test.Hspec.WebDriver.Toolkit (
   , getResultsDir
   , WdOptions(..)
 
-  , module Test.Hspec.WebDriver.Expectations
+  , module Test.Hspec.WebDriver.Toolkit.Capabilities
+  , module Test.Hspec.WebDriver.Toolkit.Expectations
   ) where
 
+import Data.Time.Clock
+import Data.Time.Format
 import GHC.Stack
+import System.Directory
+import System.FilePath
 import Test.Hspec
 import Test.Hspec.Core.Spec
-import Test.Hspec.WebDriver.Expectations
-import Test.Hspec.WebDriver.Simple.Binaries
-import Test.Hspec.WebDriver.Simple.Exceptions
-import Test.Hspec.WebDriver.Simple.Hooks.Logs
-import Test.Hspec.WebDriver.Simple.Hooks.Screenshots
-import Test.Hspec.WebDriver.Simple.Hooks.Timing
-import Test.Hspec.WebDriver.Simple.Hooks.Video
-import Test.Hspec.WebDriver.Simple.Lib
-import Test.Hspec.WebDriver.Simple.Types
-import Test.Hspec.WebDriver.Simple.Util
-import Test.Hspec.WebDriver.Simple.WebDriver
-import Test.Hspec.WebDriver.Simple.Wrap
+import Test.Hspec.WebDriver.Internal.Binaries
+import Test.Hspec.WebDriver.Internal.Exceptions
+import Test.Hspec.WebDriver.Internal.Hooks.Logs
+import Test.Hspec.WebDriver.Internal.Hooks.Screenshots
+import Test.Hspec.WebDriver.Internal.Hooks.Timing
+import Test.Hspec.WebDriver.Internal.Hooks.Video
+import Test.Hspec.WebDriver.Internal.Lib
+import Test.Hspec.WebDriver.Internal.Types
+import Test.Hspec.WebDriver.Internal.Util
+import Test.Hspec.WebDriver.Internal.WebDriver
+import Test.Hspec.WebDriver.Internal.Wrap
+import Test.Hspec.WebDriver.Toolkit.Capabilities
+import Test.Hspec.WebDriver.Toolkit.Expectations
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W
 import qualified Test.WebDriver.Commands as W
@@ -98,3 +105,11 @@ runWebDriver wdOptions hooks tests =
 -- Linux only.
 runWebDriverXvfb :: WdOptions -> W.Capabilities -> Hook -> SpecWith WdSession -> IO ()
 runWebDriverXvfb = undefined
+
+-- | Create a timestamp-named folder to contain the results of a given test run
+getTestFolder :: FilePath -> IO FilePath
+getTestFolder baseDir = do
+  timestamp <- formatTime defaultTimeLocale "%FT%H.%M.%S" <$> getCurrentTime
+  let testRoot = baseDir </> timestamp
+  createDirectoryIfMissing True testRoot
+  return testRoot

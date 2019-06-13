@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP, ConstraintKinds, QuasiQuotes, TemplateHaskell #-}
 
-module Test.Hspec.WebDriver.Helpers.Waits where
+module Test.Hspec.WebDriver.Toolkit.Waits where
 
 import Control.Concurrent
 import qualified Control.Exception as E
@@ -27,7 +27,7 @@ import Network.Stream hiding (Result)
 import System.IO
 import System.Random
 import System.Timeout
-import Test.Hspec.WebDriver.Expectations
+import Test.Hspec.WebDriver.Toolkit.Expectations
 import Test.WebDriver
 import qualified Test.WebDriver as W
 import Test.WebDriver.JSON

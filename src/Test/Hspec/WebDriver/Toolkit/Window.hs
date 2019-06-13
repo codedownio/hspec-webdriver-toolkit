@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP, QuasiQuotes, LambdaCase #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
-module Test.Hspec.WebDriver.Helpers.Window where
+module Test.Hspec.WebDriver.Toolkit.Window where
 
 import Control.Exception.Lifted as EL
 import Control.Monad
@@ -15,8 +15,8 @@ import qualified Data.Text as T
 import GHC.Stack
 import System.Environment
 import System.Process
-import Test.Hspec.WebDriver.Expectations
-import Test.Hspec.WebDriver.Helpers.Waits
+import Test.Hspec.WebDriver.Toolkit.Expectations
+import Test.Hspec.WebDriver.Toolkit.Waits
 import Test.WebDriver
 import Test.WebDriver.Exceptions
 

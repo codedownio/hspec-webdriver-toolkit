@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns #-}
 
-module Test.Hspec.WebDriver.Simple.Util where
+module Test.Hspec.WebDriver.Internal.Util where
 
 import Control.Concurrent
 import Control.Exception
@@ -25,27 +25,11 @@ import System.Process
 import Test.Hspec
 import qualified Test.Hspec as H
 import Test.Hspec.Core.Spec
-import Test.Hspec.WebDriver.Simple.Types
+import Test.Hspec.WebDriver.Internal.Types
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W
 import Test.WebDriver.Commands
 import qualified Test.WebDriver.Config as W
-
--- | Create a folder to contain the results of a given test run
-getTestFolder :: IO FilePath
-getTestFolder = do
-  timestamp <- formatTime defaultTimeLocale "%FT%H.%M.%S" <$> getCurrentTime
-  testRoot <- (</> ("test_results" </> timestamp)) <$> getCurrentDirectory
-  createDirectoryIfMissing True testRoot
-  putStrLn [i|\n********** Test root: #{testRoot} **********|]
-  return testRoot
-
-getTestFolder' :: FilePath -> IO FilePath
-getTestFolder' baseDir = do
-  timestamp <- formatTime defaultTimeLocale "%FT%H.%M.%S" <$> getCurrentTime
-  let testRoot = baseDir </> timestamp
-  createDirectoryIfMissing True testRoot
-  return testRoot
 
 getResultsDir' :: FilePath -> [String] -> FilePath
 getResultsDir' runRoot labels = runRoot </> "results" </> (L.intercalate "/" (reverse labels))

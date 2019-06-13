@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes, LambdaCase #-}
 
-module Test.Hspec.WebDriver.Simple.Lib where
+module Test.Hspec.WebDriver.Internal.Lib where
 
 import Control.Concurrent.MVar
 import Control.Exception
@@ -14,8 +14,8 @@ import qualified Data.List as L
 import Data.String.Interpolate.IsString
 import GHC.Stack
 import Test.Hspec.Core.Spec
-import Test.Hspec.WebDriver.Simple.Exceptions
-import Test.Hspec.WebDriver.Simple.Types
+import Test.Hspec.WebDriver.Internal.Exceptions
+import Test.Hspec.WebDriver.Internal.Types
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Config as W
 import qualified Test.WebDriver.Session as W

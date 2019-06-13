@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes, LambdaCase, Rank2Types #-}
 
-module Test.Hspec.WebDriver.Expectations where
+module Test.Hspec.WebDriver.Toolkit.Expectations where
 
 import Control.Exception.Lifted
 import Control.Monad.IO.Class

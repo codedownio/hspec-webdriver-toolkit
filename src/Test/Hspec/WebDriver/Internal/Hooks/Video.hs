@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, FlexibleContexts, OverloadedStrings, NamedFieldPuns, LambdaCase #-}
 
-module Test.Hspec.WebDriver.Simple.Hooks.Video (
+module Test.Hspec.WebDriver.Internal.Hooks.Video (
   recordEntireVideo
   , recordIndividualVideos
   , recordErrorVideos
@@ -28,8 +28,8 @@ import System.Process
 import System.Random
 import Test.Hspec.Core.Hooks
 import Test.Hspec.Core.Spec
-import Test.Hspec.WebDriver.Simple.Types
-import Test.Hspec.WebDriver.Simple.Util
+import Test.Hspec.WebDriver.Internal.Types
+import Test.Hspec.WebDriver.Internal.Util
 import Test.WebDriver
 
 #ifdef linux_HOST_OS

@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, LambdaCase, Rank2Types #-}
 
-module Test.Hspec.WebDriver.Simple.WebDriver where
+module Test.Hspec.WebDriver.Internal.WebDriver where
 
 import Control.Concurrent
 import qualified Control.Exception.Lifted as E
@@ -22,11 +22,11 @@ import System.IO.Temp
 import qualified System.Info as SI
 import System.Process
 import qualified Test.Hspec as H
-import Test.Hspec.WebDriver.Simple.Binaries
-import Test.Hspec.WebDriver.Simple.Binaries.Util
-import Test.Hspec.WebDriver.Simple.Ports
-import Test.Hspec.WebDriver.Simple.Types
-import Test.Hspec.WebDriver.Simple.Util
+import Test.Hspec.WebDriver.Internal.Binaries
+import Test.Hspec.WebDriver.Internal.Binaries.Util
+import Test.Hspec.WebDriver.Internal.Ports
+import Test.Hspec.WebDriver.Internal.Types
+import Test.Hspec.WebDriver.Internal.Util
 import qualified Test.WebDriver.Config as W
 
 seleniumErrFileName, seleniumOutFileName :: String
@@ -78,6 +78,7 @@ startWebDriver wdOptions@(WdOptions {testRoot, toolsDir=maybeToolsDir, runRoot, 
 
 stopWebDriver :: WdSession -> IO ()
 stopWebDriver (WdSession {wdWebDriver=(hout, herr, h)}) = do
+  putStrLn "Shutting down WebDriver"
   terminateProcess h >> waitForProcess h
   hClose hout
   hClose herr

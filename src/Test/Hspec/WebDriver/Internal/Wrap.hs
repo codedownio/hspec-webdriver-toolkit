@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards, NamedFieldPuns, ScopedTypeVariables #-}
 
-module Test.Hspec.WebDriver.Simple.Wrap where
+module Test.Hspec.WebDriver.Internal.Wrap where
 
 import Test.Hspec.Core.Spec
 

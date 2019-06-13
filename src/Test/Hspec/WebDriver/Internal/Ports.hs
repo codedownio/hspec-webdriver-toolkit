@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables #-}
 
-module Test.Hspec.WebDriver.Simple.Ports where
+module Test.Hspec.WebDriver.Internal.Ports where
 
 import Control.Exception
 import Control.Retry

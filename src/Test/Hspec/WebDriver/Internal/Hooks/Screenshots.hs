@@ -1,7 +1,7 @@
 
 {-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, CPP, QuasiQuotes, RecordWildCards #-}
 
-module Test.Hspec.WebDriver.Simple.Hooks.Screenshots (
+module Test.Hspec.WebDriver.Internal.Hooks.Screenshots (
   screenshotBeforeTest
   , screenshotAfterTest
   , screenshotBeforeAndAfterTest
@@ -25,9 +25,9 @@ import System.FilePath
 import System.IO
 import System.Random (randomRIO)
 import Test.Hspec
-import Test.Hspec.WebDriver.Helpers.Window
-import Test.Hspec.WebDriver.Simple.Types
-import Test.Hspec.WebDriver.Simple.Util
+import Test.Hspec.WebDriver.Toolkit.Window
+import Test.Hspec.WebDriver.Internal.Types
+import Test.Hspec.WebDriver.Internal.Util
 import Test.WebDriver
 import Text.Printf
 

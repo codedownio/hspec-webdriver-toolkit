@@ -1,6 +1,9 @@
-{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns #-}
+{-# LANGUAGE CPP, QuasiQuotes #-}
 
-module Test.Hspec.WebDriver.Simple.Capabilities where
+module Test.Hspec.WebDriver.Toolkit.Capabilities (
+  chromeCapabilities
+  , headlessChromeCapabilities
+  ) where
 
 import Control.Concurrent
 import Control.Exception
@@ -27,7 +30,7 @@ import System.Process
 import Test.Hspec
 import qualified Test.Hspec as H
 import Test.Hspec.Core.Spec
-import Test.Hspec.WebDriver.Simple.Types
+import Test.Hspec.WebDriver.Internal.Types
 import Test.WebDriver
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W
@@ -35,6 +38,8 @@ import Test.WebDriver.Commands
 import qualified Test.WebDriver.Config as W
 import Test.WebDriver.Firefox.Profile
 
+-- | Default capabilities for regular Chrome.
+-- It's important to set the "browser" log level to "ALL" so that tests can collect browser logs.
 chromeCapabilities :: Capabilities
 chromeCapabilities =
   def {browser=Chrome Nothing Nothing args [] chromePrefs
@@ -47,6 +52,7 @@ chromeCapabilities =
       }
   where args = ["--verbose"]
 
+-- | Default capabilities for headless Chrome.
 headlessChromeCapabilities :: Capabilities
 headlessChromeCapabilities =
   def {browser=Chrome Nothing Nothing args [] chromePrefs

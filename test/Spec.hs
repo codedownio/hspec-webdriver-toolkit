@@ -12,8 +12,6 @@ import System.FilePath
 import System.IO.Temp
 import Test.Hspec
 import Test.Hspec.Core.Spec
-import Test.Hspec.WebDriver.Simple.Capabilities
-import Test.Hspec.WebDriver.Simple.Util
 import Test.Hspec.WebDriver.Toolkit
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W
@@ -48,7 +46,7 @@ main = do
   let testRoot = "/tmp/testroot"
   let runsRoot = testRoot </> "test_runs"
   createDirectoryIfMissing True runsRoot
-  runRoot <- getTestFolder' runsRoot
+  runRoot <- getTestFolder runsRoot
   putStrLn [i|\n********** Test root: #{testRoot} **********|]
 
   let wdOptions = def { testRoot = testRoot

@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, CPP, QuasiQuotes, RecordWildCards #-}
 
-module Test.Hspec.WebDriver.Simple.Exceptions where
+module Test.Hspec.WebDriver.Internal.Exceptions where
 
 import Control.Concurrent
 import Control.Exception.Lifted as EL
@@ -16,9 +16,9 @@ import System.Directory
 import System.FilePath
 import System.IO
 import System.Random (randomRIO)
-import Test.Hspec.WebDriver.Simple.Hooks.Screenshots
-import Test.Hspec.WebDriver.Simple.Types
-import Test.Hspec.WebDriver.Simple.Util
+import Test.Hspec.WebDriver.Internal.Hooks.Screenshots
+import Test.Hspec.WebDriver.Internal.Types
+import Test.Hspec.WebDriver.Internal.Util
 import Test.WebDriver
 import Text.Printf
 
