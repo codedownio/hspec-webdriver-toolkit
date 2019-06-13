@@ -66,13 +66,3 @@ closeAllSessions (WdSession {wdSessionMap}) = do
     putStrLn [i|Closing session '#{name}'|]
     catch (W.runWD sess W.closeSession)
           (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': #{e}|])
-
-makeInitialSessionWithLabels wdOptions baseConfig caps = do
-  let wdConfig = baseConfig { W.wdCapabilities = caps }
-  WdSession <$> (pure [])
-            <*> (pure wdOptions)
-            <*> (newMVar [])
-            <*> (newMVar 0)
-            <*> (newMVar Nothing)
-            <*> (newMVar (A.object []))
-            <*> (pure wdConfig)

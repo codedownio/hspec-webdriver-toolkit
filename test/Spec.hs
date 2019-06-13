@@ -52,7 +52,8 @@ main = do
   putStrLn [i|\n********** Test root: #{testRoot} **********|]
 
   let wdOptions = def { testRoot = testRoot
-                      , runRoot = runRoot }
+                      , runRoot = runRoot
+                      , capabilities = chromeCapabilities }
 
-  -- runWebDriver wdOptions (screenshotBeforeAndAfterTest . recordEntireVideo . recordIndividualVideos . saveWebDriverLogs . saveBrowserLogs) tests
-  runWebDriver wdOptions chromeCapabilities (recordTestTiming) tests
+  -- hspec $ runWebDriver wdOptions (screenshotBeforeAndAfterTest . recordEntireVideo . recordIndividualVideos . saveWebDriverLogs . saveBrowserLogs) tests
+  hspec $ runWebDriver wdOptions (recordTestTiming) tests

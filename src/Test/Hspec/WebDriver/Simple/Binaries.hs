@@ -26,57 +26,6 @@ import Test.Hspec.WebDriver.Simple.Types
 import Test.Hspec.WebDriver.Simple.Util
 import qualified Test.WebDriver.Config as W
 
-seleniumErrFileName, seleniumOutFileName :: String
-seleniumErrFileName = "selenium_stderr.log"
-seleniumOutFileName = "selenium_stdout.log"
-
--- | Spin up a Selenium WebDriver and perform a callback while it's running.
--- Shut it down afterwards.
-withWebDriver :: WdOptions -> (W.WDConfig -> Hook -> IO a) -> IO a
-withWebDriver (WdOptions {testRoot, toolsDir=maybeToolsDir, runRoot}) action = do
-  createDirectoryIfMissing True testRoot
-
-  port <- findFreePortOrException
-
-  putStrLn [i|Starting selenium server on port: #{port}|]
-
-  let toolsDir = fromMaybe (testRoot </> "test_tools") maybeToolsDir
-  createDirectoryIfMissing True toolsDir
-  wdCreateProcess <- getWebdriverCreateProcess toolsDir port >>= \case
-    Left err -> error [i|Failed to create webdriver process: '#{err}'|]
-    Right x -> return x
-
-  chromeDataDir <- createTempDirectory runRoot "chromedata"
-
-  let logsDir = runRoot </> "selenium_logs"
-  createDirectoryIfMissing True logsDir
-  let outFilePath = logsDir </> seleniumOutFileName
-  let errFilePath =  logsDir </> seleniumErrFileName
-
-  -- Selenium log collection is disabled for now since it's rarely useful
-  (withFile outFilePath AppendMode) $ \hout ->
-    (withFile errFilePath AppendMode) $ \herr -> do
-
-      let hooks = H.after $ \sessionWithLabels -> do
-            let resultsDir = getResultsDir sessionWithLabels
-            createDirectoryIfMissing True resultsDir
-            moveAndTruncate outFilePath (resultsDir </> seleniumOutFileName)
-            moveAndTruncate errFilePath (resultsDir </> seleniumErrFileName)
-
-      E.bracket (do
-                     p@(_, _, _, _) <- createProcess $ wdCreateProcess {
-                       std_in = Inherit
-                       , std_out = UseHandle hout
-                       , std_err = UseHandle herr
-                       }
-
-                     withFile errFilePath ReadMode $ flip waitForMessage "Selenium Server is up and running"
-
-                     return p
-                )
-                (\(_, _, _, h) -> terminateProcess h >> waitForProcess h)
-                (const $ action (def { W.wdPort = fromIntegral port }) hooks)
-
 downloadSelenium :: FilePath -> IO ()
 downloadSelenium folder = void $ do
   path <- canonicalizePath folder

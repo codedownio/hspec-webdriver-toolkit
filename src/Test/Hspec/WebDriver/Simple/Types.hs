@@ -27,28 +27,32 @@ type Hook = (HasCallStack) => SpecType -> SpecType
 
 data WdOptions = WdOptions {
   testRoot :: FilePath
+  -- ^ Root folder for tests
 
-  -- Defaults to testRoot </> "test_tools"
   , toolsDir :: Maybe FilePath
+  -- ^ Defaults to testRoot </> "test_tools"
 
-  -- Folder where information for a specific run should be kept.
-  -- Defaults to testRoot </> "test_runs" </> timestamp
   , runRoot :: FilePath
+  -- ^ Folder where information for a specific run should be kept. Defaults to testRoot </> "test_runs" </> timestamp
 
-  -- Whether to skip the rest of the tests once one fails
   , skipRemainingTestsAfterFailure :: Bool
+  -- ^ Whether to skip the rest of the tests once one fails
+
+  , capabilities :: W.Capabilities
+  -- ^ The WebDriver capabilities to use
   }
 
 instance Default WdOptions where
-  def = WdOptions "/tmp" Nothing "/tmp/test_run" True
+  def = WdOptions "/tmp" Nothing "/tmp/test_run" True def
 
 data WdSession = WdSession { wdLabels :: [String]
-                                               , wdOptions :: WdOptions
-                                               , wdSessionMap :: MVar [(Browser, W.WDSession)]
-                                               , wdFailureCounter :: MVar Int
-                                               , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle))
-                                               , wdTimingInfo :: MVar A.Value
-                                               , wdConfig :: W.WDConfig }
+                           , wdWebDriver :: (Handle, Handle, ProcessHandle)
+                           , wdOptions :: WdOptions
+                           , wdSessionMap :: MVar [(Browser, W.WDSession)]
+                           , wdFailureCounter :: MVar Int
+                           , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle))
+                           , wdTimingInfo :: MVar A.Value
+                           , wdConfig :: W.WDConfig }
 
 data WdExample = WdExample { wdBrowser :: Browser
                            , wdAction :: W.WD () }

@@ -77,3 +77,10 @@ writeLogsToFile filename logs =
   withFile filename AppendMode $ \h ->
     forM_ logs $ \(LogEntry time level msg) ->
       T.hPutStrLn h [i|#{time}\t#{level}\t#{msg}|]
+
+
+      -- let hooks = H.after $ \sessionWithLabels -> do
+      --       let resultsDir = getResultsDir sessionWithLabels
+      --       createDirectoryIfMissing True resultsDir
+      --       moveAndTruncate outFilePath (resultsDir </> seleniumOutFileName)
+      --       moveAndTruncate errFilePath (resultsDir </> seleniumErrFileName)

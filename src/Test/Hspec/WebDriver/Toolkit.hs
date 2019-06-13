@@ -61,6 +61,7 @@ import Test.Hspec.WebDriver.Simple.Hooks.Video
 import Test.Hspec.WebDriver.Simple.Lib
 import Test.Hspec.WebDriver.Simple.Types
 import Test.Hspec.WebDriver.Simple.Util
+import Test.Hspec.WebDriver.Simple.WebDriver
 import Test.Hspec.WebDriver.Simple.Wrap
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W
@@ -74,24 +75,20 @@ defaultHooks = screenshotBeforeAndAfterTest
   . recordErrorVideos
   . saveBrowserLogs
 
-
 -- | All possible test instrumentation.
 allHooks :: Hook
 allHooks = undefined
 
 -- | Start a Selenium server and run a spec inside it.
 -- Auto-detects the browser version and downloads the Selenium .jar file and driver executable if necessary.
-runWebDriver :: WdOptions -> W.Capabilities -> Hook -> SpecWith WdSession -> IO ()
-runWebDriver wdOptions caps hooks tests = do
-  withWebDriver wdOptions $ \baseConfig webDriverLogSavingHooks -> do
-    initialSessionWithLabels <- makeInitialSessionWithLabels wdOptions baseConfig caps
-
-    hspec $ beforeAll (return initialSessionWithLabels) $
-      afterAll closeAllSessions $
-      addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
-      hooks
-      tests
-
+runWebDriver :: WdOptions -> Hook -> SpecWith WdSession -> Spec
+runWebDriver wdOptions hooks tests =
+  beforeAll (startWebDriver wdOptions) $
+  afterAll stopWebDriver $
+  afterAll closeAllSessions $
+  addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
+  hooks $
+  tests
 
 -- | Same as runWebDriver, but runs the entire test session inside XVFB (https://en.wikipedia.org/wiki/Xvfb)
 -- so that tests run in their own X11 display.
