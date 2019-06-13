@@ -32,6 +32,7 @@ module Test.Hspec.WebDriver.Toolkit (
 
   -- * Test helpers
   , runWithBrowser
+  , runEveryBrowser
   , closeAllSessions
 
   -- * Types
@@ -39,7 +40,9 @@ module Test.Hspec.WebDriver.Toolkit (
   , SpecType
   , Browser
   , WdSession
+  , WdExample
   , getLabels
+  , getResultsDir
   , WdOptions(..)
 
   , module Test.Hspec.WebDriver.Expectations
@@ -57,6 +60,7 @@ import Test.Hspec.WebDriver.Simple.Hooks.Timing
 import Test.Hspec.WebDriver.Simple.Hooks.Video
 import Test.Hspec.WebDriver.Simple.Lib
 import Test.Hspec.WebDriver.Simple.Types
+import Test.Hspec.WebDriver.Simple.Util
 import Test.Hspec.WebDriver.Simple.Wrap
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W

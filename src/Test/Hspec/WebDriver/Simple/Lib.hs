@@ -56,6 +56,9 @@ instance Example WdExample where
 runWithBrowser :: Browser -> W.WD () -> WdExample
 runWithBrowser browser action = WdExample browser action
 
+runEveryBrowser :: Browser -> W.WD () -> WdExample
+runEveryBrowser browser action = WdExample browser action
+
 closeAllSessions :: WdSession -> IO ()
 closeAllSessions (WdSession {wdSessionMap}) = do
   sessionMap <- readMVar wdSessionMap
