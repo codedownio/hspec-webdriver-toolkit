@@ -35,17 +35,14 @@ seleniumOutFileName = "selenium_stdout.log"
 
 -- | Spin up a Selenium WebDriver and create a WdSession
 startWebDriver :: WdOptions -> IO WdSession
-startWebDriver wdOptions@(WdOptions {testRoot, toolsDir=maybeToolsDir, runRoot, capabilities}) = do
-  createDirectoryIfMissing True testRoot
-
+startWebDriver wdOptions@(WdOptions {toolsRoot, runRoot, capabilities}) = do
   -- Set up config
   port <- findFreePortOrException
   let wdConfig = (def { W.wdPort = fromIntegral port, W.wdCapabilities = capabilities })
 
-  -- Get the CreateProcess
-  let toolsDir = fromMaybe (testRoot </> "test_tools") maybeToolsDir
-  createDirectoryIfMissing True toolsDir
-  wdCreateProcess <- getWebdriverCreateProcess toolsDir port >>= \case
+  -- Get the CreateProcess1
+  createDirectoryIfMissing True toolsRoot
+  wdCreateProcess <- getWebdriverCreateProcess toolsRoot port >>= \case
     Left err -> error [i|Failed to create webdriver process: '#{err}'|]
     Right x -> return x
 

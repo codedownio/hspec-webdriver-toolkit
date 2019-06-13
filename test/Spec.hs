@@ -44,12 +44,15 @@ tests = describe "Basic widget tests" $ beforeWith beforeAction $ after afterAct
 main :: IO ()
 main = do
   let testRoot = "/tmp/testroot"
+  let toolsRoot = testRoot </> "test_tools"
   let runsRoot = testRoot </> "test_runs"
-  createDirectoryIfMissing True runsRoot
+  createDirectoryIfMissing True toolsRoot
   runRoot <- getTestFolder runsRoot
+  createDirectoryIfMissing True runRoot
+
   putStrLn [i|\n********** Test root: #{testRoot} **********|]
 
-  let wdOptions = def { testRoot = testRoot
+  let wdOptions = def { toolsRoot = toolsRoot
                       , runRoot = runRoot
                       , capabilities = chromeCapabilities }
 

@@ -26,11 +26,8 @@ type SpecType = SpecWith WdSession
 type Hook = (HasCallStack) => SpecType -> SpecType
 
 data WdOptions = WdOptions {
-  testRoot :: FilePath
-  -- ^ Root folder for tests
-
-  , toolsDir :: Maybe FilePath
-  -- ^ Defaults to testRoot </> "test_tools"
+  toolsRoot :: FilePath
+  -- ^ Folder where any necessary binaries (chromedriver, Seleniu, etc.) will be downloaded if needed
 
   , runRoot :: FilePath
   -- ^ Folder where information for a specific run should be kept. Defaults to testRoot </> "test_runs" </> timestamp
@@ -43,7 +40,7 @@ data WdOptions = WdOptions {
   }
 
 instance Default WdOptions where
-  def = WdOptions "/tmp" Nothing "/tmp/test_run" True def
+  def = WdOptions "" "" True def
 
 data WdSession = WdSession { wdLabels :: [String]
                            , wdWebDriver :: (Handle, Handle, ProcessHandle)
