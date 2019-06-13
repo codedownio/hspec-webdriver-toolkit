@@ -36,7 +36,7 @@ saveBrowserLogs = after flushLogsToFile
 -- * Implementation
 
 flushLogsToFile :: (HasCallStack) => WdSessionWithLabels -> IO ()
-flushLogsToFile sessionWithLabels@(WdSessionWithLabels {wdSession=(WdSession {..}), ..}) = handle (\(e :: EL.SomeException) -> putStrLn [i|Failed to get logs: #{e}|]) $ do
+flushLogsToFile sessionWithLabels@(WdSessionWithLabels {..}) = handle (\(e :: EL.SomeException) -> putStrLn [i|Failed to get logs: #{e}|]) $ do
   let resultsDir = getResultsDir sessionWithLabels
   createDirectoryIfMissing True resultsDir
 

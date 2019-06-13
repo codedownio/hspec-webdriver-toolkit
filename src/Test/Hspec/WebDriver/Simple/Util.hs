@@ -51,7 +51,7 @@ getResultsDir' :: FilePath -> [String] -> FilePath
 getResultsDir' runRoot labels = runRoot </> "results" </> (L.intercalate "/" (reverse labels))
 
 getResultsDir :: WdSessionWithLabels -> FilePath
-getResultsDir (WdSessionWithLabels {wdSession=(WdSession {wdOptions=(WdOptions {runRoot})}), wdLabels}) = getResultsDir' runRoot wdLabels
+getResultsDir (WdSessionWithLabels {wdOptions=(WdOptions {runRoot}), wdLabels}) = getResultsDir' runRoot wdLabels
 
 -- * Truncating log files
 
@@ -80,3 +80,9 @@ leftOnException = E.handle (\(e :: SomeException) -> return $ Left $ convert $ s
 
 leftOnException' :: (MonadIO m, MonadBaseControl IO m) => m a -> m (Either T.Text a)
 leftOnException' action = E.catch (Right <$> action) (\(e :: SomeException) -> return $ Left $ convert $ show e)
+
+-- * Util
+
+whenJust :: (Monad m) => Maybe a -> (a -> m b) -> m ()
+whenJust Nothing _ = return ()
+whenJust (Just x) action = void $ action x

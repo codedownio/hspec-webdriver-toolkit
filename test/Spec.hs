@@ -66,6 +66,7 @@ main = do
       afterAll closeAllSessions $
       addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
       screenshotBeforeAndAfterTest $
+      recordEntireVideo $
       recordIndividualVideos $
       webDriverLogSavingHooks $
       saveBrowserLogs $

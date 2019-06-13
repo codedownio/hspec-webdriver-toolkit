@@ -16,7 +16,9 @@ addLabelsToTree transform specA = do
   where
     transformTree :: [String] -> SpecTree b -> SpecTree a
     transformTree labels (Node label innerTrees) = Node label (fmap (transformTree (label : labels)) innerTrees)
+    transformTree labels (NodeWithCleanup cleanup innerTrees) = NodeWithCleanup cleanup' (fmap (transformTree labels) innerTrees)
+      where cleanup' x = cleanup (transform labels x)
     transformTree labels leaf@(Leaf item@(Item {itemRequirement, itemExample})) = Leaf (item {itemExample=newExample})
-      where newExample params newFn db = itemExample params (act newFn) db
+      where newExample params newFn = itemExample params (act newFn)
             act :: (ActionWith a -> IO ()) -> ActionWith b -> IO ()
             act newFn actionExpectingB = newFn $ \x -> actionExpectingB (transform (itemRequirement : labels) x)

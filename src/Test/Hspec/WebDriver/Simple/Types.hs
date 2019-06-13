@@ -11,6 +11,8 @@ import Data.Either
 import qualified Data.List as L
 import Data.String.Interpolate.IsString
 import GHC.Stack
+import System.IO
+import System.Process
 import Test.Hspec.Core.Spec
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Config as W
@@ -39,13 +41,12 @@ data WdOptions = WdOptions {
 instance Default WdOptions where
   def = WdOptions "/tmp" Nothing "/tmp/test_run" True
 
-data WdSession = WdSession { wdOptions :: WdOptions
-                           , wdSessionMap :: MVar [(Browser, W.WDSession)]
-                           , wdFailureCounter :: MVar Int
-                           , wdConfig :: W.WDConfig }
-
 data WdSessionWithLabels = WdSessionWithLabels { wdLabels :: [String]
-                                               , wdSession :: WdSession }
+                                               , wdOptions :: WdOptions
+                                               , wdSessionMap :: MVar [(Browser, W.WDSession)]
+                                               , wdFailureCounter :: MVar Int
+                                               , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle))
+                                               , wdConfig :: W.WDConfig }
 
 data WdExample = WdExample { wdBrowser :: Browser
                            , wdAction :: W.WD () }

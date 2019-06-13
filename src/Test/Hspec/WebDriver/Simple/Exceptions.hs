@@ -32,7 +32,7 @@ import Shelly hiding (sleep, (</>), FilePath, run)
 
 
 handleTestException :: (HasCallStack) => WdSessionWithLabels -> EL.SomeException -> IO ()
-handleTestException sessionWithLabels@(WdSessionWithLabels {wdSession=(WdSession {..}), ..}) e = do
+handleTestException sessionWithLabels@(WdSessionWithLabels {..}) e = do
   let resultsDir = getResultsDir sessionWithLabels
   createDirectoryIfMissing True resultsDir
 

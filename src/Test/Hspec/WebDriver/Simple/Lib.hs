@@ -27,7 +27,7 @@ instance Example WdExample where
   evaluateExample (WdExample browser action) _ act _ = do
     resultVar <- newEmptyMVar
 
-    act $ \sessionWithLabels@(WdSessionWithLabels {wdSession=(WdSession {..}), ..}) -> do
+    act $ \sessionWithLabels@(WdSessionWithLabels {..}) -> do
       eitherResult :: Either Result () <- runExceptT $ do
 
         -- Create new session if necessary
@@ -56,7 +56,7 @@ runWithBrowser :: Browser -> W.WD () -> WdExample
 runWithBrowser browser action = WdExample browser action
 
 closeAllSessions :: WdSessionWithLabels -> IO ()
-closeAllSessions (WdSessionWithLabels {wdSession=(WdSession {wdSessionMap})}) = do
+closeAllSessions (WdSessionWithLabels {wdSessionMap}) = do
   sessionMap <- readMVar wdSessionMap
   forM_ sessionMap $ \(name, sess) -> do
     putStrLn [i|Closing session '#{name}'|]
@@ -65,6 +65,4 @@ closeAllSessions (WdSessionWithLabels {wdSession=(WdSession {wdSessionMap})}) = 
 
 makeInitialSessionWithLabels wdOptions baseConfig caps = do
   let wdConfig = baseConfig { W.wdCapabilities = caps }
-  failureCounter <- newMVar 0
-  sess <- WdSession <$> (pure wdOptions) <*> (newMVar []) <*> (newMVar 0) <*> (pure wdConfig)
-  return $ WdSessionWithLabels [] sess
+  WdSessionWithLabels <$> (pure []) <*> (pure wdOptions) <*> (newMVar []) <*> (newMVar 0) <*> (newMVar Nothing) <*> (pure wdConfig)
