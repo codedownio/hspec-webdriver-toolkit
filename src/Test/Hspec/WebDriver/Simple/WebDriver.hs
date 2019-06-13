@@ -38,6 +38,7 @@ startWebDriver :: WdOptions -> IO WdSession
 startWebDriver wdOptions@(WdOptions {testRoot, toolsDir=maybeToolsDir, runRoot, capabilities}) = do
   createDirectoryIfMissing True testRoot
 
+  -- Set up config
   port <- findFreePortOrException
   let wdConfig = (def { W.wdPort = fromIntegral port, W.wdCapabilities = capabilities })
 
