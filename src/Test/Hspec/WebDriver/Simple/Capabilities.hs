@@ -35,8 +35,8 @@ import Test.WebDriver.Commands
 import qualified Test.WebDriver.Config as W
 import Test.WebDriver.Firefox.Profile
 
-chromeCapabilities :: FilePath -> Capabilities
-chromeCapabilities chromeDataDir =
+chromeCapabilities :: Capabilities
+chromeCapabilities =
   def {browser=Chrome Nothing Nothing args [] chromePrefs
       , additionalCaps=[("loggingPrefs", A.object [("browser", "ALL")
                                                   , ("client", "WARNING")
@@ -47,8 +47,8 @@ chromeCapabilities chromeDataDir =
       }
   where args = ["--verbose"]
 
-headlessChromeCapabilities :: FilePath -> Capabilities
-headlessChromeCapabilities chromeDataDir =
+headlessChromeCapabilities :: Capabilities
+headlessChromeCapabilities =
   def {browser=Chrome Nothing Nothing args [] chromePrefs
       , additionalCaps=[("loggingPrefs", A.object [("browser", "ALL")])]
       }

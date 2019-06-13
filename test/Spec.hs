@@ -12,6 +12,7 @@ import System.FilePath
 import System.IO.Temp
 import Test.Hspec
 import Test.Hspec.Core.Spec
+import Test.Hspec.WebDriver.Simple.Capabilities
 import Test.Hspec.WebDriver.Simple.Util
 import Test.Hspec.WebDriver.Toolkit
 import qualified Test.WebDriver as W
@@ -53,4 +54,5 @@ main = do
   let wdOptions = def { testRoot = testRoot
                       , runRoot = runRoot }
 
-  runWebDriver wdOptions (screenshotBeforeAndAfterTest . recordEntireVideo . recordIndividualVideos . saveWebDriverLogs . saveBrowserLogs) tests
+  -- runWebDriver wdOptions (screenshotBeforeAndAfterTest . recordEntireVideo . recordIndividualVideos . saveWebDriverLogs . saveBrowserLogs) tests
+  runWebDriver wdOptions chromeCapabilities (recordTestTiming) tests

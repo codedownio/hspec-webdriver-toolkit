@@ -81,15 +81,16 @@ allHooks = undefined
 
 -- | Start a Selenium server and run a spec inside it.
 -- Auto-detects the browser version and downloads the Selenium .jar file and driver executable if necessary.
-runWebDriver :: WdOptions -> Hook -> SpecWith WdSession -> IO ()
-runWebDriver wdOptions hooks tests = withWebDriver wdOptions $ \baseConfig webDriverLogSavingHooks -> do
-  initialSessionWithLabels <- makeInitialSessionWithLabels wdOptions baseConfig $ W.defaultCaps { W.browser = W.chrome }
+runWebDriver :: WdOptions -> W.Capabilities -> Hook -> SpecWith WdSession -> IO ()
+runWebDriver wdOptions caps hooks tests = do
+  withWebDriver wdOptions $ \baseConfig webDriverLogSavingHooks -> do
+    initialSessionWithLabels <- makeInitialSessionWithLabels wdOptions baseConfig caps
 
-  hspec $ beforeAll (return initialSessionWithLabels) $
-    afterAll closeAllSessions $
-    addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
-    hooks
-    tests
+    hspec $ beforeAll (return initialSessionWithLabels) $
+      afterAll closeAllSessions $
+      addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
+      hooks
+      tests
 
 
 -- | Same as runWebDriver, but runs the entire test session inside XVFB (https://en.wikipedia.org/wiki/Xvfb)
@@ -98,5 +99,5 @@ runWebDriver wdOptions hooks tests = withWebDriver wdOptions $ \baseConfig webDr
 -- avoids cluttering your system with browser windows.
 -- This is also a great way to run Selenium tests on a CI server.
 -- Linux only.
-runWebDriverXvfb :: WdOptions -> IO ()
+runWebDriverXvfb :: WdOptions -> W.Capabilities -> Hook -> SpecWith WdSession -> IO ()
 runWebDriverXvfb = undefined

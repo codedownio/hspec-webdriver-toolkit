@@ -69,4 +69,10 @@ closeAllSessions (WdSession {wdSessionMap}) = do
 
 makeInitialSessionWithLabels wdOptions baseConfig caps = do
   let wdConfig = baseConfig { W.wdCapabilities = caps }
-  WdSession <$> (pure []) <*> (pure wdOptions) <*> (newMVar []) <*> (newMVar 0) <*> (newMVar Nothing) <*> (newMVar (A.object [])) <*> (pure wdConfig)
+  WdSession <$> (pure [])
+            <*> (pure wdOptions)
+            <*> (newMVar [])
+            <*> (newMVar 0)
+            <*> (newMVar Nothing)
+            <*> (newMVar (A.object []))
+            <*> (pure wdConfig)
