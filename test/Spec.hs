@@ -14,6 +14,7 @@ import Test.Hspec
 import Test.Hspec.Core.Spec
 import Test.Hspec.WebDriver.Simple.Binaries
 import Test.Hspec.WebDriver.Simple.Lib
+import Test.Hspec.WebDriver.Simple.Logs
 import Test.Hspec.WebDriver.Simple.Screenshots
 import Test.Hspec.WebDriver.Simple.Types
 import Test.Hspec.WebDriver.Simple.Util
@@ -23,8 +24,6 @@ import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Capabilities as W
 import Test.WebDriver.Commands
 import qualified Test.WebDriver.Config as W
-
-type SpecType = SpecWith WdSessionWithLabels
 
 beforeAction :: WdSessionWithLabels -> IO WdSessionWithLabels
 beforeAction sess@(WdSessionWithLabels {wdLabels}) = do
@@ -60,7 +59,7 @@ main = do
   let wdOptions = def { testRoot = testRoot
                       , runRoot = runRoot }
 
-  withWebDriver wdOptions $ \baseConfig logSavingHooks -> do
+  withWebDriver wdOptions $ \baseConfig webDriverLogSavingHooks -> do
     initialSessionWithLabels <- makeInitialSessionWithLabels wdOptions baseConfig $ W.defaultCaps { W.browser = W.chrome }
 
     hspec $ beforeAll (return initialSessionWithLabels) $
@@ -68,5 +67,6 @@ main = do
       addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
       screenshotHooks $
       withIndividualVideosHooks $
-      logSavingHooks $
+      webDriverLogSavingHooks $
+      saveBrowserLogs $
       tests

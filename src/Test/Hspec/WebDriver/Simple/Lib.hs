@@ -40,6 +40,7 @@ instance Example WdExample where
                                 return ((browser, sess):sessionMap, Right sess)
                             )
 
+        -- Run the test example, handling the exception specially
         (liftIO (try $ W.runWD sess action)) >>= \case
           Left e -> liftIO $ do
             handleTestException sessionWithLabels e

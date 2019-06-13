@@ -18,7 +18,9 @@ import qualified Test.WebDriver.Session as W
 
 type Browser = String
 
-type Hooks = SpecWith WdSessionWithLabels -> SpecWith WdSessionWithLabels
+type SpecType = SpecWith WdSessionWithLabels
+
+type Hooks = SpecType -> SpecType
 
 data WdOptions = WdOptions {
   testRoot :: FilePath

@@ -44,7 +44,9 @@ recordEntireVideoHook = undefined
 
 withIndividualVideosHooks :: (HasCallStack) => Hooks
 withIndividualVideosHooks = aroundWith $ \action -> \session@(WdSessionWithLabels {wdLabels, wdSession=(WdSession {wdOptions=(WdOptions {runRoot})})}) -> do
-  E.bracket (startFullScreenVideoRecording (getResultsDir session </> "video") True)
+  let resultsDir = (getResultsDir session)
+  createDirectoryIfMissing True resultsDir
+  E.bracket (startFullScreenVideoRecording (resultsDir </> "video") True)
             (endVideoRecording)
             (const $ action session)
 

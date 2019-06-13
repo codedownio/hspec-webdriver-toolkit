@@ -11,6 +11,7 @@ import qualified Data.ByteString as B
 import qualified Data.List as L
 import Data.Maybe
 import Data.String.Interpolate.IsString
+import qualified Data.Text as T
 import GHC.Stack
 import qualified Network.Socket as N
 import System.Directory
@@ -31,6 +32,8 @@ screenshotHooks = screenshotBeforeHook . screenshotAfterHook
 
 -- * Implementation
 
+
+saveScreenshots :: (HasCallStack) => T.Text -> WdSessionWithLabels -> IO ()
 saveScreenshots screenshotName sessionWithLabels@(WdSessionWithLabels {wdSession=(WdSession {..}), ..}) = do
   let resultsDir = getResultsDir sessionWithLabels
   createDirectoryIfMissing True resultsDir
@@ -41,7 +44,7 @@ saveScreenshots screenshotName sessionWithLabels@(WdSessionWithLabels {wdSession
     ws <- windows
     forM_ ws $ \w@(WindowHandle windowText) -> EL.handle swallowNoSuchWindowException $ do
       focusWindow w
-      saveScreenshot [i|#{resultsDir}/#{browser}_#{windowText}_#{screenshotName}.png|]
+      saveScreenshot $ resultsDir </> [i|#{browser}_#{windowText}_#{screenshotName}.png|]
 
 swallowNoSuchWindowException (FailedCommand NoSuchWindow _) = return ()
 swallowNoSuchWindowException e = EL.throw e
