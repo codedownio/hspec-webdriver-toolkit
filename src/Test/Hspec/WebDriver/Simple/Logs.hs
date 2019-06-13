@@ -3,6 +3,8 @@
 
 module Test.Hspec.WebDriver.Simple.Logs (
   saveBrowserLogs
+  , failOnSevereBrowserLogs
+  , failOnCertainBrowserLogs
   ) where
 
 import Control.Concurrent
@@ -30,8 +32,18 @@ import Text.Printf
 
 -- * Hooks
 
-saveBrowserLogs :: (HasCallStack) => Hooks
+-- | Save the browser logs for each test to the results directory.
+saveBrowserLogs :: Hook
 saveBrowserLogs = after flushLogsToFile
+
+-- | Fail a test when severe browser logs are found.
+failOnSevereBrowserLogs :: Hook
+failOnSevereBrowserLogs = failOnCertainBrowserLogs predicate
+  where predicate (LogEntry {logLevel}) = logLevel == LogSevere
+
+-- | Fail a test when logs matching a predicate are found.
+failOnCertainBrowserLogs :: (LogEntry -> Bool) -> Hook
+failOnCertainBrowserLogs predicate = undefined
 
 -- * Implementation
 

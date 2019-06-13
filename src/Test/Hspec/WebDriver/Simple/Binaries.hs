@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, LambdaCase #-}
+{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, LambdaCase, Rank2Types #-}
 
 module Test.Hspec.WebDriver.Simple.Binaries where
 
@@ -32,7 +32,7 @@ seleniumOutFileName = "selenium_stdout.log"
 
 -- | Spin up a Selenium WebDriver and perform a callback while it's running.
 -- Shut it down afterwards.
-withWebDriver :: WdOptions -> (W.WDConfig -> Hooks -> IO a) -> IO a
+withWebDriver :: WdOptions -> (W.WDConfig -> Hook -> IO a) -> IO a
 withWebDriver (WdOptions {testRoot, toolsDir=maybeToolsDir, runRoot}) action = do
   createDirectoryIfMissing True testRoot
 

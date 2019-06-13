@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, InstanceSigs, RecordWildCards, ScopedTypeVariables, QuasiQuotes #-}
+{-# LANGUAGE TypeFamilies, InstanceSigs, RecordWildCards, ScopedTypeVariables, QuasiQuotes, Rank2Types #-}
 
 module Test.Hspec.WebDriver.Simple.Types where
 
@@ -22,7 +22,7 @@ type Browser = String
 
 type SpecType = SpecWith WdSessionWithLabels
 
-type Hooks = SpecType -> SpecType
+type Hook = (HasCallStack) => SpecType -> SpecType
 
 data WdOptions = WdOptions {
   testRoot :: FilePath

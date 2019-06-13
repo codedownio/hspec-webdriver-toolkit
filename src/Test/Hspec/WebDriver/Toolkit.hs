@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes, LambdaCase #-}
+{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes, LambdaCase, Rank2Types #-}
 
 module Test.Hspec.WebDriver.Toolkit (
   -- * Main functions
@@ -23,6 +23,13 @@ module Test.Hspec.WebDriver.Toolkit (
 
   -- ** Log saving
   , saveBrowserLogs
+  , failOnSevereBrowserLogs
+  , failOnCertainBrowserLogs
+
+  -- * Types
+  , Hook
+  , SpecType
+  , Browser
   ) where
 
 import GHC.Stack
@@ -36,19 +43,19 @@ import Test.Hspec.WebDriver.Simple.Video
 
 
 -- | A good default set of hooks: `screenshotBeforeAndAfterTest`, `recordErrorVideos`, and `saveBrowserLogs`.
-defaultHooks :: (HasCallStack) => Hooks
+defaultHooks :: Hook
 defaultHooks = screenshotBeforeAndAfterTest
   . recordErrorVideos
   . saveBrowserLogs
 
 
 -- | All possible test instrumentation.
-allHooks :: (HasCallStack) => Hooks
+allHooks :: Hook
 allHooks = undefined
 
 -- | Start a Selenium server and run a spec inside it.
 -- Auto-detects the browser version and downloads the Selenium .jar file and driver executable if necessary.
-runWebDriver :: WdOptions -> Hooks -> SpecWith WdSessionWithLabels -> IO ()
+runWebDriver :: WdOptions -> Hook -> SpecWith WdSessionWithLabels -> IO ()
 runWebDriver = undefined
 
 -- | Same as runWebDriver, but runs the entire test session inside XVFB (https://en.wikipedia.org/wiki/Xvfb)

@@ -1,7 +1,13 @@
 
 {-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, CPP, QuasiQuotes, RecordWildCards #-}
 
-module Test.Hspec.WebDriver.Simple.Screenshots where
+module Test.Hspec.WebDriver.Simple.Screenshots (
+  screenshotBeforeTest
+  , screenshotAfterTest
+  , screenshotBeforeAndAfterTest
+
+  , saveScreenshots
+  ) where
 
 import Control.Concurrent
 import Control.Exception.Lifted as EL
@@ -27,15 +33,15 @@ import Text.Printf
 -- * Hooks
 
 -- | Take a screenshot of the browser(s) before running each test
-screenshotBeforeTest :: (HasCallStack) => Hooks
+screenshotBeforeTest :: Hook
 screenshotBeforeTest = beforeWith (\x -> saveScreenshots "before" x >> return x)
 
 -- | Take a screenshot of the browser(s) after running each test
-screenshotAfterTest :: (HasCallStack) => Hooks
+screenshotAfterTest :: Hook
 screenshotAfterTest = after (saveScreenshots "after")
 
 -- | Take a screenshot of the browser(s) before and after running each test
-screenshotBeforeAndAfterTest :: (HasCallStack) => Hooks
+screenshotBeforeAndAfterTest :: Hook
 screenshotBeforeAndAfterTest = screenshotBeforeTest . screenshotAfterTest
 
 -- * Implementation

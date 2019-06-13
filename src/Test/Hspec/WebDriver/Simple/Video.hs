@@ -44,7 +44,7 @@ import Safe
 -- * Hooks
 
 -- | Record a single video of the entire test
-recordEntireVideo :: (HasCallStack) => Hooks
+recordEntireVideo :: Hook
 recordEntireVideo = beforeAllHook . afterAllHook
   where beforeAllHook = beforeWith $ \sess@(WdSessionWithLabels {wdOptions=(WdOptions {runRoot}), wdEntireTestRunVideo}) -> do
           modifyMVar_ wdEntireTestRunVideo $ \maybeProcess -> case maybeProcess of
@@ -58,7 +58,7 @@ recordEntireVideo = beforeAllHook . afterAllHook
           whenJust maybeVideoProcess endVideoRecording
 
 -- | Record videos of each test
-recordIndividualVideos :: (HasCallStack) => Hooks
+recordIndividualVideos :: Hook
 recordIndividualVideos = aroundWith $ \action -> \session@(WdSessionWithLabels {wdLabels, wdOptions=(WdOptions {runRoot})}) -> do
   let resultsDir = (getResultsDir session)
   createDirectoryIfMissing True resultsDir
@@ -67,7 +67,7 @@ recordIndividualVideos = aroundWith $ \action -> \session@(WdSessionWithLabels {
             (const $ action session)
 
 -- | Record videos of each test, but delete them unless the test fails.
-recordErrorVideos :: (HasCallStack) => Hooks
+recordErrorVideos :: Hook
 recordErrorVideos = undefined
 
 -- * Video util functions
