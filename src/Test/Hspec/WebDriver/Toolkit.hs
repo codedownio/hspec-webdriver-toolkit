@@ -27,6 +27,9 @@ module Test.Hspec.WebDriver.Toolkit (
   , failOnCertainBrowserLogs
   , saveWebDriverLogs
 
+  -- ** Test timing
+  , recordTestTiming
+
   -- * Test helpers
   , runWithBrowser
   , closeAllSessions
@@ -38,15 +41,19 @@ module Test.Hspec.WebDriver.Toolkit (
   , WdSession
   , getLabels
   , WdOptions(..)
+
+  , module Test.Hspec.WebDriver.Expectations
   ) where
 
 import GHC.Stack
 import Test.Hspec
 import Test.Hspec.Core.Spec
+import Test.Hspec.WebDriver.Expectations
 import Test.Hspec.WebDriver.Simple.Binaries
 import Test.Hspec.WebDriver.Simple.Exceptions
 import Test.Hspec.WebDriver.Simple.Hooks.Logs
 import Test.Hspec.WebDriver.Simple.Hooks.Screenshots
+import Test.Hspec.WebDriver.Simple.Hooks.Timing
 import Test.Hspec.WebDriver.Simple.Hooks.Video
 import Test.Hspec.WebDriver.Simple.Lib
 import Test.Hspec.WebDriver.Simple.Types

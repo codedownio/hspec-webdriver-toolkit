@@ -6,6 +6,7 @@ import Control.Concurrent.MVar
 import Control.Exception
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
+import qualified Data.Aeson as A
 import Data.Default
 import Data.Either
 import qualified Data.List as L
@@ -46,6 +47,7 @@ data WdSession = WdSession { wdLabels :: [String]
                                                , wdSessionMap :: MVar [(Browser, W.WDSession)]
                                                , wdFailureCounter :: MVar Int
                                                , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle))
+                                               , wdTimingInfo :: MVar A.Value
                                                , wdConfig :: W.WDConfig }
 
 data WdExample = WdExample { wdBrowser :: Browser

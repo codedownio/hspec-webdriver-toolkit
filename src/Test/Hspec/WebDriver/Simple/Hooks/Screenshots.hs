@@ -25,6 +25,7 @@ import System.FilePath
 import System.IO
 import System.Random (randomRIO)
 import Test.Hspec
+import Test.Hspec.WebDriver.Helpers.Window
 import Test.Hspec.WebDriver.Simple.Types
 import Test.Hspec.WebDriver.Simple.Util
 import Test.WebDriver
@@ -58,6 +59,3 @@ saveScreenshots screenshotName sessionWithLabels@(WdSession {..}) = do
     forM_ ws $ \w@(WindowHandle windowText) -> EL.handle swallowNoSuchWindowException $ do
       focusWindow w
       saveScreenshot $ resultsDir </> [i|#{browser}_#{windowText}_#{screenshotName}.png|]
-
-swallowNoSuchWindowException (FailedCommand NoSuchWindow _) = return ()
-swallowNoSuchWindowException e = EL.throw e

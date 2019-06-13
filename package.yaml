@@ -20,15 +20,20 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/hspec-webdriver-simple#readme>
 
 dependencies:
+- aeson
 - base >= 4.7 && < 5
 - bytestring
 - convertible
 - data-default
 - directory
+- exceptions
 - filepath
+- hostname
 - hspec
 - hspec-core
 - interpolate
+- lens-aeson
+- lens
 - lifted-base
 - monad-control
 - network
@@ -39,8 +44,12 @@ dependencies:
 - text
 - time
 - transformers
+- transformers-base
 - unix
+- unordered-containers
 - webdriver
+- HTTP
+- HUnit
 - X11
 
 default-extensions:

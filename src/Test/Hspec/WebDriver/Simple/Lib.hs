@@ -7,6 +7,7 @@ import Control.Exception
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
+import qualified Data.Aeson as A
 import Data.Default
 import Data.Either
 import qualified Data.List as L
@@ -65,4 +66,4 @@ closeAllSessions (WdSession {wdSessionMap}) = do
 
 makeInitialSessionWithLabels wdOptions baseConfig caps = do
   let wdConfig = baseConfig { W.wdCapabilities = caps }
-  WdSession <$> (pure []) <*> (pure wdOptions) <*> (newMVar []) <*> (newMVar 0) <*> (newMVar Nothing) <*> (pure wdConfig)
+  WdSession <$> (pure []) <*> (pure wdOptions) <*> (newMVar []) <*> (newMVar 0) <*> (newMVar Nothing) <*> (newMVar (A.object [])) <*> (pure wdConfig)

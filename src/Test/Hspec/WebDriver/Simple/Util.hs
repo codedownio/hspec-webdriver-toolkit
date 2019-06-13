@@ -86,3 +86,11 @@ leftOnException' action = E.catch (Right <$> action) (\(e :: SomeException) -> r
 whenJust :: (Monad m) => Maybe a -> (a -> m b) -> m ()
 whenJust Nothing _ = return ()
 whenJust (Just x) action = void $ action x
+
+whenLeft :: (Monad m) => Either a b -> (a -> m ()) -> m ()
+whenLeft (Left x) action = action x
+whenLeft (Right _) _ = return ()
+
+whenRight :: (Monad m) => Either a b -> (b -> m ()) -> m ()
+whenRight (Left _) _ = return ()
+whenRight (Right x) action = action x
