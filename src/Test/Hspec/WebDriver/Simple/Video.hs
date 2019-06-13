@@ -39,16 +39,24 @@ import Safe
 
 -- * Hooks
 
-recordEntireVideoHook :: Hooks
-recordEntireVideoHook = undefined
+-- | Record a single video of the entire test
+recordEntireVideo :: (HasCallStack) => Hooks
+recordEntireVideo = beforeAllHook . afterAllHook
+  where beforeAllHook = undefined
+        afterAllHook = undefined
 
-withIndividualVideosHooks :: (HasCallStack) => Hooks
-withIndividualVideosHooks = aroundWith $ \action -> \session@(WdSessionWithLabels {wdLabels, wdSession=(WdSession {wdOptions=(WdOptions {runRoot})})}) -> do
+-- | Record videos of each test
+recordIndividualVideos :: (HasCallStack) => Hooks
+recordIndividualVideos = aroundWith $ \action -> \session@(WdSessionWithLabels {wdLabels, wdSession=(WdSession {wdOptions=(WdOptions {runRoot})})}) -> do
   let resultsDir = (getResultsDir session)
   createDirectoryIfMissing True resultsDir
   E.bracket (startFullScreenVideoRecording (resultsDir </> "video") True)
             (endVideoRecording)
             (const $ action session)
+
+-- | Record videos of each test, but delete them unless the test fails.
+recordErrorVideos :: (HasCallStack) => Hooks
+recordErrorVideos = undefined
 
 -- * Video util functions
 

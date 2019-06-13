@@ -26,12 +26,19 @@ import Text.Printf
 
 -- * Hooks
 
-screenshotBeforeHook = beforeWith (\x -> saveScreenshots "before" x >> return x)
-screenshotAfterHook = after (saveScreenshots "after")
-screenshotHooks = screenshotBeforeHook . screenshotAfterHook
+-- | Take a screenshot of the browser(s) before running each test
+screenshotBeforeTest :: (HasCallStack) => Hooks
+screenshotBeforeTest = beforeWith (\x -> saveScreenshots "before" x >> return x)
+
+-- | Take a screenshot of the browser(s) after running each test
+screenshotAfterTest :: (HasCallStack) => Hooks
+screenshotAfterTest = after (saveScreenshots "after")
+
+-- | Take a screenshot of the browser(s) before and after running each test
+screenshotBeforeAndAfterTest :: (HasCallStack) => Hooks
+screenshotBeforeAndAfterTest = screenshotBeforeTest . screenshotAfterTest
 
 -- * Implementation
-
 
 saveScreenshots :: (HasCallStack) => T.Text -> WdSessionWithLabels -> IO ()
 saveScreenshots screenshotName sessionWithLabels@(WdSessionWithLabels {wdSession=(WdSession {..}), ..}) = do

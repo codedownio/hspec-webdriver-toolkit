@@ -65,8 +65,8 @@ main = do
     hspec $ beforeAll (return initialSessionWithLabels) $
       afterAll closeAllSessions $
       addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
-      screenshotHooks $
-      withIndividualVideosHooks $
+      screenshotBeforeAndAfterTest $
+      recordIndividualVideos $
       webDriverLogSavingHooks $
       saveBrowserLogs $
       tests

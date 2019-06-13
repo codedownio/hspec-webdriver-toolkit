@@ -30,6 +30,7 @@ import Text.Printf
 
 -- * Hooks
 
+saveBrowserLogs :: (HasCallStack) => Hooks
 saveBrowserLogs = after flushLogsToFile
 
 -- * Implementation
