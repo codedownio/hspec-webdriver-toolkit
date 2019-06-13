@@ -35,7 +35,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , Hook
   , SpecType
   , Browser
-  , WdSessionWithLabels
+  , WdSession
   , getLabels
   , WdOptions(..)
   ) where
@@ -70,7 +70,7 @@ allHooks = undefined
 
 -- | Start a Selenium server and run a spec inside it.
 -- Auto-detects the browser version and downloads the Selenium .jar file and driver executable if necessary.
-runWebDriver :: WdOptions -> Hook -> SpecWith WdSessionWithLabels -> IO ()
+runWebDriver :: WdOptions -> Hook -> SpecWith WdSession -> IO ()
 runWebDriver wdOptions hooks tests = withWebDriver wdOptions $ \baseConfig webDriverLogSavingHooks -> do
   initialSessionWithLabels <- makeInitialSessionWithLabels wdOptions baseConfig $ W.defaultCaps { W.browser = W.chrome }
 

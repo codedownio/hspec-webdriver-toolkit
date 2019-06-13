@@ -52,8 +52,8 @@ saveWebDriverLogs = undefined
 
 -- * Implementation
 
-flushLogsToFile :: (HasCallStack) => WdSessionWithLabels -> IO ()
-flushLogsToFile sessionWithLabels@(WdSessionWithLabels {..}) = handle (\(e :: EL.SomeException) -> putStrLn [i|Failed to get logs: #{e}|]) $ do
+flushLogsToFile :: (HasCallStack) => WdSession -> IO ()
+flushLogsToFile sessionWithLabels@(WdSession {..}) = handle (\(e :: EL.SomeException) -> putStrLn [i|Failed to get logs: #{e}|]) $ do
   let resultsDir = getResultsDir sessionWithLabels
   createDirectoryIfMissing True resultsDir
 

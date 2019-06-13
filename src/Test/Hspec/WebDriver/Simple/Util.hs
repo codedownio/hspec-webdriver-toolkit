@@ -50,8 +50,8 @@ getTestFolder' baseDir = do
 getResultsDir' :: FilePath -> [String] -> FilePath
 getResultsDir' runRoot labels = runRoot </> "results" </> (L.intercalate "/" (reverse labels))
 
-getResultsDir :: WdSessionWithLabels -> FilePath
-getResultsDir (WdSessionWithLabels {wdOptions=(WdOptions {runRoot}), wdLabels}) = getResultsDir' runRoot wdLabels
+getResultsDir :: WdSession -> FilePath
+getResultsDir (WdSession {wdOptions=(WdOptions {runRoot}), wdLabels}) = getResultsDir' runRoot wdLabels
 
 -- * Truncating log files
 

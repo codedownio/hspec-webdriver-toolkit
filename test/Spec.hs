@@ -19,7 +19,7 @@ import qualified Test.WebDriver.Capabilities as W
 import Test.WebDriver.Commands
 import qualified Test.WebDriver.Config as W
 
-beforeAction :: WdSessionWithLabels -> IO WdSessionWithLabels
+beforeAction :: WdSession -> IO WdSession
 beforeAction sess@(getLabels -> labels) = do
   putStrLn $ "beforeAction called with labels: " ++ show labels
   return sess

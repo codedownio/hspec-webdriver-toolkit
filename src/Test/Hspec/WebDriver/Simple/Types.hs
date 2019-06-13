@@ -20,7 +20,7 @@ import qualified Test.WebDriver.Session as W
 
 type Browser = String
 
-type SpecType = SpecWith WdSessionWithLabels
+type SpecType = SpecWith WdSession
 
 type Hook = (HasCallStack) => SpecType -> SpecType
 
@@ -41,7 +41,7 @@ data WdOptions = WdOptions {
 instance Default WdOptions where
   def = WdOptions "/tmp" Nothing "/tmp/test_run" True
 
-data WdSessionWithLabels = WdSessionWithLabels { wdLabels :: [String]
+data WdSession = WdSession { wdLabels :: [String]
                                                , wdOptions :: WdOptions
                                                , wdSessionMap :: MVar [(Browser, W.WDSession)]
                                                , wdFailureCounter :: MVar Int
@@ -52,5 +52,5 @@ data WdExample = WdExample { wdBrowser :: Browser
                            , wdAction :: W.WD () }
                | WdPending { wdPendingMsg :: Maybe String }
 
-getLabels :: WdSessionWithLabels -> [String]
-getLabels (WdSessionWithLabels {wdLabels}) = wdLabels
+getLabels :: WdSession -> [String]
+getLabels (WdSession {wdLabels}) = wdLabels

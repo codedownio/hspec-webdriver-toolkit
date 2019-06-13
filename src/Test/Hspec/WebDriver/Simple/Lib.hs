@@ -20,14 +20,14 @@ import qualified Test.WebDriver.Config as W
 import qualified Test.WebDriver.Session as W
 
 instance Example WdExample where
-  type Arg WdExample = WdSessionWithLabels
+  type Arg WdExample = WdSession
 
   evaluateExample :: (HasCallStack) => WdExample -> Params -> (ActionWith (Arg WdExample) -> IO ()) -> ProgressCallback -> IO Result
   evaluateExample (WdPending msg) _ _ _ = return $ Result "" $ Pending Nothing msg
   evaluateExample (WdExample browser action) _ act _ = do
     resultVar <- newEmptyMVar
 
-    act $ \sessionWithLabels@(WdSessionWithLabels {..}) -> do
+    act $ \sessionWithLabels@(WdSession {..}) -> do
       eitherResult :: Either Result () <- runExceptT $ do
 
         -- Create new session if necessary
@@ -55,8 +55,8 @@ instance Example WdExample where
 runWithBrowser :: Browser -> W.WD () -> WdExample
 runWithBrowser browser action = WdExample browser action
 
-closeAllSessions :: WdSessionWithLabels -> IO ()
-closeAllSessions (WdSessionWithLabels {wdSessionMap}) = do
+closeAllSessions :: WdSession -> IO ()
+closeAllSessions (WdSession {wdSessionMap}) = do
   sessionMap <- readMVar wdSessionMap
   forM_ sessionMap $ \(name, sess) -> do
     putStrLn [i|Closing session '#{name}'|]
@@ -65,4 +65,4 @@ closeAllSessions (WdSessionWithLabels {wdSessionMap}) = do
 
 makeInitialSessionWithLabels wdOptions baseConfig caps = do
   let wdConfig = baseConfig { W.wdCapabilities = caps }
-  WdSessionWithLabels <$> (pure []) <*> (pure wdOptions) <*> (newMVar []) <*> (newMVar 0) <*> (newMVar Nothing) <*> (pure wdConfig)
+  WdSession <$> (pure []) <*> (pure wdOptions) <*> (newMVar []) <*> (newMVar 0) <*> (newMVar Nothing) <*> (pure wdConfig)

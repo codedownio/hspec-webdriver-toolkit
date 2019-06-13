@@ -46,8 +46,8 @@ screenshotBeforeAndAfterTest = screenshotBeforeTest . screenshotAfterTest
 
 -- * Implementation
 
-saveScreenshots :: (HasCallStack) => T.Text -> WdSessionWithLabels -> IO ()
-saveScreenshots screenshotName sessionWithLabels@(WdSessionWithLabels {..}) = do
+saveScreenshots :: (HasCallStack) => T.Text -> WdSession -> IO ()
+saveScreenshots screenshotName sessionWithLabels@(WdSession {..}) = do
   let resultsDir = getResultsDir sessionWithLabels
   createDirectoryIfMissing True resultsDir
 

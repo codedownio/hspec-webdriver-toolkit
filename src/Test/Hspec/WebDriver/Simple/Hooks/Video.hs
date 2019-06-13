@@ -46,20 +46,20 @@ import Safe
 -- | Record a single video of the entire test
 recordEntireVideo :: Hook
 recordEntireVideo = beforeAllHook . afterAllHook
-  where beforeAllHook = beforeWith $ \sess@(WdSessionWithLabels {wdOptions=(WdOptions {runRoot}), wdEntireTestRunVideo}) -> do
+  where beforeAllHook = beforeWith $ \sess@(WdSession {wdOptions=(WdOptions {runRoot}), wdEntireTestRunVideo}) -> do
           modifyMVar_ wdEntireTestRunVideo $ \maybeProcess -> case maybeProcess of
             Nothing -> handle (\(e :: SomeException) -> putStrLn [i|Error in recordEntireVideo: '#{e}'|] >> return Nothing)
                               (Just <$> (startFullScreenVideoRecording (runRoot </> "video") True))
             Just _ -> return maybeProcess
           return sess
 
-        afterAllHook = afterAll $ \(WdSessionWithLabels {wdEntireTestRunVideo}) -> do
+        afterAllHook = afterAll $ \(WdSession {wdEntireTestRunVideo}) -> do
           maybeVideoProcess <- readMVar wdEntireTestRunVideo
           whenJust maybeVideoProcess endVideoRecording
 
 -- | Record videos of each test
 recordIndividualVideos :: Hook
-recordIndividualVideos = aroundWith $ \action -> \session@(WdSessionWithLabels {wdLabels, wdOptions=(WdOptions {runRoot})}) -> do
+recordIndividualVideos = aroundWith $ \action -> \session@(WdSession {wdLabels, wdOptions=(WdOptions {runRoot})}) -> do
   let resultsDir = (getResultsDir session)
   createDirectoryIfMissing True resultsDir
   E.bracket (startFullScreenVideoRecording (resultsDir </> "video") True)
