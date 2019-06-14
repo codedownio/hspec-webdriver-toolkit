@@ -1,11 +1,17 @@
 {-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, LambdaCase, Rank2Types #-}
 
-module Test.Hspec.WebDriver.Internal.WebDriver where
+module Test.Hspec.WebDriver.Internal.WebDriver (
+  startWebDriver
+  , stopWebDriver
+  ) where
 
 import Control.Concurrent
+import Control.Monad.Trans.Except
 import qualified Data.Aeson as A
 import Data.Default
 import Data.String.Interpolate.IsString
+import qualified Data.Text as T
+import Network.Socket (PortNumber)
 import System.Directory
 import System.FilePath
 import System.IO
@@ -61,3 +67,16 @@ stopWebDriver (WdSession {wdWebDriver=(hout, herr, h, _, _)}) = do
   terminateProcess h >> waitForProcess h
   hClose hout
   hClose herr
+
+
+-- * Util
+
+getWebdriverCreateProcess :: FilePath -> PortNumber -> IO (Either T.Text CreateProcess)
+getWebdriverCreateProcess toolsDir port = runExceptT $ do
+  chromeDriverPath <- ExceptT $ downloadChromeDriverIfNecessary toolsDir
+  seleniumPath <- ExceptT $ downloadSeleniumIfNecessary toolsDir
+  return (proc "java" [
+             [i|-Dwebdriver.chrome.driver=#{chromeDriverPath}|]
+               ,"-jar", seleniumPath
+               , "-port", show port
+               ])
