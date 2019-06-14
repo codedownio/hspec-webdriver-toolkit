@@ -4,13 +4,17 @@ module Test.Hspec.WebDriver.Internal.Exceptions where
 
 import Control.Concurrent
 import Control.Exception.Lifted as EL
+import Control.Monad
 import Data.String.Interpolate.IsString
 import GHC.Stack
 import System.Directory
 import System.FilePath
+import System.IO
 import Test.Hspec.WebDriver.Internal.Hooks.Screenshots
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
+import Test.WebDriver
+import Test.WebDriver.Session
 import Text.Printf
 
 #ifndef mingw32_HOST_OS
@@ -23,14 +27,14 @@ import Shelly hiding (sleep, (</>), FilePath, run)
 
 
 handleTestException :: (HasCallStack) => WdSession -> EL.SomeException -> IO ()
-handleTestException sessionWithLabels@(WdSession {wdOptions=(WdOptions {runRoot}), ..}) e = do
-  let resultsDir = getResultsDir sessionWithLabels
+handleTestException session@(WdSession {wdOptions=(WdOptions {runRoot, saveSeleniumMessageHistory}), ..}) e = do
+  let resultsDir = getResultsDir session
   createDirectoryIfMissing True resultsDir
 
   -- Put the error message in the results dir
   writeFile (resultsDir </> "error_info.txt") (show e)
 
-  saveScreenshots "error_screenshot" sessionWithLabels
+  saveScreenshots "error_screenshot" session
 
   -- Update the failure counter
   failureNum <- modifyMVar wdFailureCounter $ \n -> return (n + 1, n)
@@ -49,3 +53,15 @@ handleTestException sessionWithLabels@(WdSession {wdOptions=(WdOptions {runRoot}
   catch (createSymbolicLink (".." </> makeRelative errorsDir resultsDir) (errorsDir </> errorFolderName))
         (\(e :: SomeException) -> putStrLn [i|Error: failed to create symlink on test exception: #{e}|])
 #endif
+
+saveSessionHistoryIfConfigured :: (HasCallStack) => WdSession -> IO ()
+saveSessionHistoryIfConfigured session@(WdSession {wdOptions=(WdOptions {saveSeleniumMessageHistory}), ..}) = do
+  let resultsDir = getResultsDir session
+  createDirectoryIfMissing True resultsDir
+
+  when (saveSeleniumMessageHistory `elem` [Always, OnException]) $ do
+    sessionMap <- readMVar wdSessionMap
+    forM_ sessionMap $ \(browser, sess) -> do
+      hist <- wdSessHist <$> runWD sess getSession
+      withFile (resultsDir </> [i|#{browser}_selenium_messages.txt|]) WriteMode $ \h ->
+        forM_ hist $ hPrint h

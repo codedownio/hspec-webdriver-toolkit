@@ -46,6 +46,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , getLabels
   , getResultsDir
   , WdOptions(..)
+  , WhenToSave(..)
 
   , module Test.Hspec.WebDriver.Toolkit.Capabilities
   , module Test.Hspec.WebDriver.Toolkit.Expectations

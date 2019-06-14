@@ -18,6 +18,8 @@ type SpecType = SpecWith WdSession
 
 type Hook = (HasCallStack) => SpecType -> SpecType
 
+data WhenToSave = Always | OnException | Never deriving (Show, Eq)
+
 data WdOptions = WdOptions {
   toolsRoot :: FilePath
   -- ^ Folder where any necessary binaries (chromedriver, Seleniu, etc.) will be downloaded if needed
@@ -30,10 +32,13 @@ data WdOptions = WdOptions {
 
   , capabilities :: W.Capabilities
   -- ^ The WebDriver capabilities to use
+
+  , saveSeleniumMessageHistory :: WhenToSave
+  -- ^ When to save a record of Selenium requests and responses
   }
 
 instance Default WdOptions where
-  def = WdOptions "" "" True def
+  def = WdOptions "" "" True def OnException
 
 data WdSession = WdSession { wdLabels :: [String]
                            , wdWebDriver :: (Handle, Handle, ProcessHandle, FilePath, FilePath)

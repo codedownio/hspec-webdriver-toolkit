@@ -55,9 +55,12 @@ runActionWithBrowser resultVar browser action sessionWithLabels@(WdSession {..})
     -- Run the test example, handling the exception specially
     (liftIO $ try $ W.runWD sess action) >>= \case
       Left e -> liftIO $ do
+        saveSessionHistoryIfConfigured sessionWithLabels
         handleTestException sessionWithLabels e
         throw e -- Rethrow for the test framework to handle
-      Right () -> return ()
+      Right () -> do
+        liftIO $ saveSessionHistoryIfConfigured sessionWithLabels
+        return ()
 
   putMVar resultVar (fromLeft (Result "" Success) eitherResult)
 
