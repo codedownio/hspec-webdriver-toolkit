@@ -9,7 +9,6 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
 import qualified Data.Aeson as A
 import Data.Default
-import System.IO
 import qualified Data.List as L
 import Data.Maybe
 import Data.String.Interpolate.IsString
@@ -24,14 +23,11 @@ import System.Process
 import qualified Test.Hspec as H
 import Test.Hspec.WebDriver.Internal.Binaries
 import Test.Hspec.WebDriver.Internal.Binaries.Util
+import Test.Hspec.WebDriver.Internal.Hooks.Logs
 import Test.Hspec.WebDriver.Internal.Ports
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
 import qualified Test.WebDriver.Config as W
-
-seleniumErrFileName, seleniumOutFileName :: String
-seleniumErrFileName = "selenium_stderr.log"
-seleniumOutFileName = "selenium_stdout.log"
 
 -- | Spin up a Selenium WebDriver and create a WdSession
 startWebDriver :: WdOptions -> IO WdSession
@@ -40,7 +36,7 @@ startWebDriver wdOptions@(WdOptions {toolsRoot, runRoot, capabilities}) = do
   port <- findFreePortOrException
   let wdConfig = (def { W.wdPort = fromIntegral port, W.wdCapabilities = capabilities })
 
-  -- Get the CreateProcess1
+  -- Get the CreateProcess
   createDirectoryIfMissing True toolsRoot
   wdCreateProcess <- getWebdriverCreateProcess toolsRoot port >>= \case
     Left err -> error [i|Failed to create webdriver process: '#{err}'|]
@@ -52,8 +48,7 @@ startWebDriver wdOptions@(WdOptions {toolsRoot, runRoot, capabilities}) = do
   hout <- openFile (logsDir </> seleniumOutFileName) AppendMode
   herr <- openFile (logsDir </> seleniumErrFileName) AppendMode
 
-  -- Start the process and wait for it to be up
-  putStrLn [i|Starting selenium server on port: #{port}|]
+  -- Start the process and wait for it to be ready
   (_, _, _, p) <- createProcess $ wdCreateProcess {
     std_in = Inherit
     , std_out = UseHandle hout
@@ -63,19 +58,18 @@ startWebDriver wdOptions@(WdOptions {toolsRoot, runRoot, capabilities}) = do
     flip waitForMessage "Selenium Server is up and running"
 
   -- Make the WdSession
-  WdSession <$> (pure [])
-            <*> (pure (hout, herr, p))
-            <*> (pure wdOptions)
-            <*> (newMVar [])
-            <*> (newMVar 0)
-            <*> (newMVar Nothing)
-            <*> (newMVar (A.object []))
-            <*> (pure wdConfig)
+  WdSession <$> pure []
+            <*> pure (hout, herr, p, logsDir </> seleniumOutFileName, logsDir </> seleniumErrFileName)
+            <*> pure wdOptions
+            <*> newMVar []
+            <*> newMVar 0
+            <*> newMVar Nothing
+            <*> newMVar (A.object [])
+            <*> pure wdConfig
 
 
 stopWebDriver :: WdSession -> IO ()
-stopWebDriver (WdSession {wdWebDriver=(hout, herr, h)}) = do
-  putStrLn "Shutting down WebDriver"
+stopWebDriver (WdSession {wdWebDriver=(hout, herr, h, _, _)}) = do
   terminateProcess h >> waitForProcess h
   hClose hout
   hClose herr

@@ -16,8 +16,6 @@ import Network.Socket (PortNumber)
 import System.Directory
 import System.FilePath
 import System.IO
-import System.IO.Temp
-import qualified System.Info as SI
 import System.Process
 import qualified Test.Hspec as H
 import Test.Hspec.WebDriver.Internal.Binaries.Util
@@ -31,33 +29,30 @@ downloadSelenium folder = void $ do
   path <- canonicalizePath folder
   putStrLn [i|Downloading selenium-server.jar to #{path}|]
   createDirectoryIfMissing True path
-  readCreateProcess (shell [i|curl https://selenium-release.storage.googleapis.com/3.9/selenium-server-standalone-3.9.1.jar -o #{path}/selenium-server.jar|]) ""
+  -- readCreateProcess (shell [i|curl https://selenium-release.storage.googleapis.com/3.9/selenium-server-standalone-3.9.1.jar -o #{path}/selenium-server.jar|]) ""
+  readCreateProcess (shell [i|curl https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar -o #{path}/selenium-server.jar|]) ""
 
 getWebdriverCreateProcess :: FilePath -> PortNumber -> IO (Either T.Text CreateProcess)
 getWebdriverCreateProcess toolsDir port = runExceptT $ do
+  -- Download chromedriver
   chromeMajorVersion <- ExceptT detectChromeMajorVersion
-
   downloadPath <- case L.lookup chromeMajorVersion chromeDriverPaths of
     Nothing -> throwE [i|Couldn't figure out which chromedriver to download for Chrome '#{chromeMajorVersion}'|]
     Just platformToPath -> case L.lookup detectPlatform platformToPath of
       Nothing -> throwE [i|Couldn't find chrome driver for platform '#{detectPlatform}'|]
       Just path -> return path
-
   let executableName = case detectPlatform of
         Windows -> "chromedriver.exe"
         _ -> "chromedriver"
-
   let chromeDriverPath = [i|#{toolsDir}/chromedrivers/#{chromeMajorVersion}/#{executableName}|]
   (liftIO $ doesFileExist chromeDriverPath) >>= flip unless (ExceptT $ downloadAndUnzipToPath downloadPath chromeDriverPath)
 
   -- Download selenium
-  liftIO $ (doesFileExist [i|#{toolsDir}/selenium-server.jar|] >>= flip unless (downloadSelenium toolsDir))
+  liftIO (doesFileExist [i|#{toolsDir}/selenium-server.jar|] >>= flip unless (downloadSelenium toolsDir))
 
   return (proc "java" [
              [i|-Dwebdriver.chrome.driver=#{chromeDriverPath}|]
-
                ,"-jar", [i|#{toolsDir}/selenium-server.jar|]
-
                , "-port", show port
                ])
 

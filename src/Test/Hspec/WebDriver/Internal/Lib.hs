@@ -16,7 +16,9 @@ import GHC.Stack
 import Test.Hspec.Core.Spec
 import Test.Hspec.WebDriver.Internal.Exceptions
 import Test.Hspec.WebDriver.Internal.Types
+import Test.Hspec.WebDriver.Internal.Util
 import qualified Test.WebDriver as W
+import qualified Test.WebDriver.Class as W
 import qualified Test.WebDriver.Config as W
 import qualified Test.WebDriver.Session as W
 
@@ -27,42 +29,63 @@ instance Example WdExample where
   evaluateExample (WdPending msg) _ _ _ = return $ Result "" $ Pending Nothing msg
   evaluateExample (WdExample browser action) _ act _ = do
     resultVar <- newEmptyMVar
-
-    act $ \sessionWithLabels@(WdSession {..}) -> do
-      eitherResult :: Either Result () <- runExceptT $ do
-
-        -- Create new session if necessary
-        sess <- ExceptT $ modifyMVar wdSessionMap $ \sessionMap -> case L.lookup browser sessionMap of
-          Just sess -> return (sessionMap, Right sess)
-          Nothing -> handle (\(e :: SomeException) -> return $ (sessionMap, Left $ Result "Exception while creating WebDriver session" (Failure Nothing (Error Nothing e))))
-                            (do
-                                sess' <- W.mkSession wdConfig
-                                sess <- W.runWD sess' $ W.createSession $ W.wdCapabilities wdConfig
-                                return ((browser, sess):sessionMap, Right sess)
-                            )
-
-        -- Run the test example, handling the exception specially
-        (liftIO (try $ W.runWD sess action)) >>= \case
-          Left e -> liftIO $ do
-            handleTestException sessionWithLabels e
-            throw e -- Rethrow for the test framework to handle
-          Right () -> return ()
-
-      putMVar resultVar (fromLeft (Result "" Success) eitherResult)
-
+    act $ runActionWithBrowser resultVar browser action
     takeMVar resultVar
 
+-- instance (W.WebDriver wd) => Example (wd ()) where
+--   type Arg (wd ()) = ()
+
+--   evaluateExample :: (HasCallStack) => wd () -> Params -> (ActionWith (Arg (wd ())) -> IO ()) -> ProgressCallback -> IO Result
+--   evaluateExample action _ act _ = do
+--     resultVar <- newEmptyMVar
+--     act $ runActionWithBrowser resultVar "browser1" action
+--     takeMVar resultVar
+
+
+runActionWithBrowser :: MVar Result -> Browser -> W.WD () -> WdSession -> IO ()
+runActionWithBrowser resultVar browser action sessionWithLabels@(WdSession {..}) = do
+  eitherResult :: Either Result () <- runExceptT $ do
+
+    -- Create new session if necessary
+    sess <- ExceptT $ modifyMVar wdSessionMap $ \sessionMap -> case L.lookup browser sessionMap of
+      Just sess -> return (sessionMap, Right sess)
+      Nothing -> handle (\(e :: SomeException) -> return (sessionMap, Left $ Result "Exception while creating WebDriver session" (Failure Nothing (Error Nothing e))))
+                        (do
+                            sess' <- W.mkSession wdConfig
+                            sess <- W.runWD sess' $ W.createSession $ W.wdCapabilities wdConfig
+                            return ((browser, sess):sessionMap, Right sess)
+                        )
+
+    -- Run the test example, handling the exception specially
+    (liftIO $ try $ W.runWD sess action) >>= \case
+      Left e -> liftIO $ do
+        handleTestException sessionWithLabels e
+        throw e -- Rethrow for the test framework to handle
+      Right () -> return ()
+
+  putMVar resultVar (fromLeft (Result "" Success) eitherResult)
 
 runWithBrowser :: Browser -> W.WD () -> WdExample
-runWithBrowser browser action = WdExample browser action
+runWithBrowser = WdExample
 
 runEveryBrowser :: Browser -> W.WD () -> WdExample
-runEveryBrowser browser action = WdExample browser action
+runEveryBrowser = WdExample
+
+runWithBrowser' :: Browser -> W.WD () -> WdSession -> IO WdSession
+runWithBrowser' browser action session = do
+  resultVar <- newEmptyMVar
+  runActionWithBrowser resultVar browser action session
+  return session
+
+closeSession :: Browser -> WdSession -> IO ()
+closeSession browser (WdSession {wdSessionMap}) = do
+  sessionMap <- readMVar wdSessionMap
+  whenJust (L.lookup browser sessionMap) $ \sess ->
+    W.runWD sess W.closeSession
 
 closeAllSessions :: WdSession -> IO ()
 closeAllSessions (WdSession {wdSessionMap}) = do
   sessionMap <- readMVar wdSessionMap
   forM_ sessionMap $ \(name, sess) -> do
-    putStrLn [i|Closing session '#{name}'|]
     catch (W.runWD sess W.closeSession)
-          (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': #{e}|])
+          (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': '#{e}'|])

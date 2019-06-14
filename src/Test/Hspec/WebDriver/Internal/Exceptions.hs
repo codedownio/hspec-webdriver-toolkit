@@ -32,7 +32,7 @@ import Shelly hiding (sleep, (</>), FilePath, run)
 
 
 handleTestException :: (HasCallStack) => WdSession -> EL.SomeException -> IO ()
-handleTestException sessionWithLabels@(WdSession {..}) e = do
+handleTestException sessionWithLabels@(WdSession {wdOptions=(WdOptions {runRoot}), ..}) e = do
   let resultsDir = getResultsDir sessionWithLabels
   createDirectoryIfMissing True resultsDir
 
@@ -45,7 +45,7 @@ handleTestException sessionWithLabels@(WdSession {..}) e = do
   failureNum <- modifyMVar wdFailureCounter $ \n -> return (n + 1, n)
 
   -- Make a symlink to the results dir in the "errors" folder
-  let errorsDir = resultsDir </> "errors"
+  let errorsDir = runRoot </> "errors"
   createDirectoryIfMissing True errorsDir
 
   let paddedNum :: String = printf "%04d" failureNum

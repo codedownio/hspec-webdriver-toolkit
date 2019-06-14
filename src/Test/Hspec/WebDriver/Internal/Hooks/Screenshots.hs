@@ -25,9 +25,9 @@ import System.FilePath
 import System.IO
 import System.Random (randomRIO)
 import Test.Hspec
-import Test.Hspec.WebDriver.Toolkit.Window
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
+import Test.Hspec.WebDriver.Toolkit.Window
 import Test.WebDriver
 import Text.Printf
 
@@ -54,8 +54,5 @@ saveScreenshots screenshotName sessionWithLabels@(WdSession {..}) = do
 
   -- For every session, and for every window, try to get a screenshot for the results dir
   sessionMap <- readMVar wdSessionMap
-  forM_ sessionMap $ \(browser, sess) -> runWD sess $ do
-    ws <- windows
-    forM_ ws $ \w@(WindowHandle windowText) -> EL.handle swallowNoSuchWindowException $ do
-      focusWindow w
-      saveScreenshot $ resultsDir </> [i|#{browser}_#{windowText}_#{screenshotName}.png|]
+  forM_ sessionMap $ \(browser, sess) -> runWD sess $
+    saveScreenshot $ resultsDir </> [i|#{browser}_#{screenshotName}.png|]

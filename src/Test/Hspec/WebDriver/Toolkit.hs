@@ -32,6 +32,7 @@ module Test.Hspec.WebDriver.Toolkit (
 
   -- * Test helpers
   , runWithBrowser
+  , runWithBrowser'
   , runEveryBrowser
   , closeAllSessions
   , getTestFolder

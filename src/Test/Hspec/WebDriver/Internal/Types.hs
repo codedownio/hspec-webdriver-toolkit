@@ -43,7 +43,7 @@ instance Default WdOptions where
   def = WdOptions "" "" True def
 
 data WdSession = WdSession { wdLabels :: [String]
-                           , wdWebDriver :: (Handle, Handle, ProcessHandle)
+                           , wdWebDriver :: (Handle, Handle, ProcessHandle, FilePath, FilePath)
                            , wdOptions :: WdOptions
                            , wdSessionMap :: MVar [(Browser, W.WDSession)]
                            , wdFailureCounter :: MVar Int

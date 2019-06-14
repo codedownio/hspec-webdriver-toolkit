@@ -6,6 +6,9 @@ module Test.Hspec.WebDriver.Internal.Hooks.Logs (
   , failOnSevereBrowserLogs
   , failOnCertainBrowserLogs
   , saveWebDriverLogs
+
+  , seleniumOutFileName
+  , seleniumErrFileName
   ) where
 
 import Control.Concurrent
@@ -48,7 +51,17 @@ failOnCertainBrowserLogs predicate = undefined
 
 -- | Save the webdriver logs for each test to the results directory.
 saveWebDriverLogs :: Hook
-saveWebDriverLogs = undefined
+saveWebDriverLogs = after $ \sess@(WdSession {wdWebDriver=(_, _, _, stdoutPath, stderrPath)}) -> do
+  let resultsDir = getResultsDir sess
+  createDirectoryIfMissing True resultsDir
+  moveAndTruncate stdoutPath (resultsDir </> seleniumOutFileName)
+  moveAndTruncate stderrPath (resultsDir </> seleniumErrFileName)
+
+-- * Constants
+
+seleniumErrFileName, seleniumOutFileName :: String
+seleniumErrFileName = "selenium_stderr.log"
+seleniumOutFileName = "selenium_stdout.log"
 
 -- * Implementation
 
@@ -77,10 +90,3 @@ writeLogsToFile filename logs =
   withFile filename AppendMode $ \h ->
     forM_ logs $ \(LogEntry time level msg) ->
       T.hPutStrLn h [i|#{time}\t#{level}\t#{msg}|]
-
-
-      -- let hooks = H.after $ \sessionWithLabels -> do
-      --       let resultsDir = getResultsDir sessionWithLabels
-      --       createDirectoryIfMissing True resultsDir
-      --       moveAndTruncate outFilePath (resultsDir </> seleniumOutFileName)
-      --       moveAndTruncate errFilePath (resultsDir </> seleniumErrFileName)
