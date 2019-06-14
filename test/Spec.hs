@@ -20,7 +20,8 @@ tests = describe "Tookit tests" $ do
 
       let wdOptions = def { toolsRoot = toolsRoot
                           , runRoot = runRoot
-                          , capabilities = chromeCapabilities
+                          , capabilities = headlessChromeCapabilities
+                          -- , capabilities = chromeCapabilities
                           }
 
       hspec $ runWebDriver wdOptions screenshotBeforeAndAfterTest $ do
