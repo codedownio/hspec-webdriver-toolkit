@@ -53,13 +53,9 @@ module Test.Hspec.WebDriver.Toolkit (
 
 import Data.Time.Clock
 import Data.Time.Format
-import GHC.Stack
 import System.Directory
 import System.FilePath
 import Test.Hspec
-import Test.Hspec.Core.Spec
-import Test.Hspec.WebDriver.Internal.Binaries
-import Test.Hspec.WebDriver.Internal.Exceptions
 import Test.Hspec.WebDriver.Internal.Hooks.Logs
 import Test.Hspec.WebDriver.Internal.Hooks.Screenshots
 import Test.Hspec.WebDriver.Internal.Hooks.Timing
@@ -72,9 +68,6 @@ import Test.Hspec.WebDriver.Internal.Wrap
 import Test.Hspec.WebDriver.Toolkit.Capabilities
 import Test.Hspec.WebDriver.Toolkit.Expectations
 import qualified Test.WebDriver as W
-import qualified Test.WebDriver.Capabilities as W
-import qualified Test.WebDriver.Commands as W
-import qualified Test.WebDriver.Config as W
 
 
 -- | A good default set of hooks: `screenshotBeforeAndAfterTest`, `recordErrorVideos`, and `saveBrowserLogs`.

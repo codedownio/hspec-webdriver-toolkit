@@ -14,24 +14,17 @@ module Test.Hspec.WebDriver.Internal.Hooks.Logs (
 import Control.Concurrent
 import Control.Exception.Lifted as EL
 import Control.Monad
-import Control.Retry
-import qualified Data.ByteString as B
-import qualified Data.List as L
-import Data.Maybe
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import GHC.Stack
-import qualified Network.Socket as N
 import System.Directory
 import System.FilePath
 import System.IO
-import System.Random (randomRIO)
 import Test.Hspec
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
 import Test.WebDriver
-import Text.Printf
 
 
 -- * Hooks

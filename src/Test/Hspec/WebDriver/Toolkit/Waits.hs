@@ -7,30 +7,20 @@ import qualified Control.Exception as E
 import qualified Control.Exception.Lifted as EL
 import Control.Monad
 import Control.Monad.Base
-import Control.Monad.Catch (catch, MonadCatch, throwM)
+import Control.Monad.Catch (MonadCatch)
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
-import qualified Data.Aeson as A
-import qualified Data.Aeson.TH as A
-import Data.Char (toLower)
 import Data.Convertible
-import qualified Data.List as L
 import Data.Maybe
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
 import Data.Time.Clock
 import GHC.Stack
 import Network.HTTP
-import Network.HostName
-import Network.Socket (PortNumber)
 import Network.Stream hiding (Result)
-import System.IO
-import System.Random
 import System.Timeout
 import Test.Hspec.WebDriver.Toolkit.Expectations
 import Test.WebDriver
-import qualified Test.WebDriver as W
-import Test.WebDriver.JSON
 import Test.WebDriver.Session (WDSessionStateIO, WDSessionStateControl, WDSessionState)
 
 

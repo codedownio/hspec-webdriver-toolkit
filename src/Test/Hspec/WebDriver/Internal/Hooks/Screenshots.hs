@@ -1,4 +1,3 @@
-
 {-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, CPP, QuasiQuotes, RecordWildCards #-}
 
 module Test.Hspec.WebDriver.Internal.Hooks.Screenshots (
@@ -10,26 +9,16 @@ module Test.Hspec.WebDriver.Internal.Hooks.Screenshots (
   ) where
 
 import Control.Concurrent
-import Control.Exception.Lifted as EL
 import Control.Monad
-import Control.Retry
-import qualified Data.ByteString as B
-import qualified Data.List as L
-import Data.Maybe
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
 import GHC.Stack
-import qualified Network.Socket as N
 import System.Directory
 import System.FilePath
-import System.IO
-import System.Random (randomRIO)
 import Test.Hspec
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
-import Test.Hspec.WebDriver.Toolkit.Window
 import Test.WebDriver
-import Text.Printf
 
 -- * Hooks
 

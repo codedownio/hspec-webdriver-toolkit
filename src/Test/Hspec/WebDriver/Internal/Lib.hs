@@ -7,8 +7,6 @@ import Control.Exception
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
-import qualified Data.Aeson as A
-import Data.Default
 import Data.Either
 import qualified Data.List as L
 import Data.String.Interpolate.IsString
@@ -18,9 +16,7 @@ import Test.Hspec.WebDriver.Internal.Exceptions
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
 import qualified Test.WebDriver as W
-import qualified Test.WebDriver.Class as W
 import qualified Test.WebDriver.Config as W
-import qualified Test.WebDriver.Session as W
 
 instance Example WdExample where
   type Arg WdExample = WdSession

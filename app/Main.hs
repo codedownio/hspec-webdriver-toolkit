@@ -1,23 +1,14 @@
 {-# LANGUAGE NamedFieldPuns, RecordWildCards, QuasiQuotes, ScopedTypeVariables, ViewPatterns #-}
 module Main where
 
-import Control.Concurrent
-import Control.Exception
-import Control.Monad
+import Control.Monad.IO.Class
 import Data.Default
 import Data.String.Interpolate.IsString
-import Data.Time.Clock
-import Data.Time.Format
 import System.Directory
 import System.FilePath
-import System.IO.Temp
 import Test.Hspec
-import Test.Hspec.Core.Spec
 import Test.Hspec.WebDriver.Toolkit
-import qualified Test.WebDriver as W
-import qualified Test.WebDriver.Capabilities as W
 import Test.WebDriver.Commands
-import qualified Test.WebDriver.Config as W
 
 beforeAction :: WdSession -> IO WdSession
 beforeAction sess@(getLabels -> labels) = do

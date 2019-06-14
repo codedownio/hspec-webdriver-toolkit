@@ -31,7 +31,7 @@ recordTestTiming = (H.aroundWith recordIndividualTestTiming) . (H.afterAll saveT
 -- * Implementation
 
 recordIndividualTestTiming :: (HasCallStack) => (WdSession -> IO b) -> WdSession -> IO ()
-recordIndividualTestTiming action session@(WdSession {wdTimingInfo, wdLabels, wdOptions=(WdOptions {runRoot})}) = do
+recordIndividualTestTiming action session@(WdSession {wdTimingInfo, wdLabels}) = do
   timingInfo <- readMVar wdTimingInfo
 
   (eitherResult, timeDiff) <- liftIO $ timeItCatchingException (action session)

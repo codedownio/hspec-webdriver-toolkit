@@ -63,6 +63,8 @@ default-extensions:
 
 library:
   source-dirs: src
+  ghc-options:
+    - -W
 
 executables:
   hspec-webdriver-toolkit-exe:

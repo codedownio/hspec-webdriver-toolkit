@@ -3,20 +3,13 @@
 module Test.Hspec.WebDriver.Internal.Types where
 
 import Control.Concurrent.MVar
-import Control.Exception
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Except
 import qualified Data.Aeson as A
 import Data.Default
-import Data.Either
-import qualified Data.List as L
-import Data.String.Interpolate.IsString
 import GHC.Stack
 import System.IO
 import System.Process
 import Test.Hspec.Core.Spec
 import qualified Test.WebDriver as W
-import qualified Test.WebDriver.Config as W
 import qualified Test.WebDriver.Session as W
 
 type Browser = String

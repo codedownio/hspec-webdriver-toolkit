@@ -5,38 +5,11 @@ module Test.Hspec.WebDriver.Toolkit.Capabilities (
   , headlessChromeCapabilities
   ) where
 
-import Control.Concurrent
-import Control.Exception
-import qualified Control.Exception.Lifted as E
-import Control.Monad
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Data.Aeson as A
-import Data.Convertible
 import Data.Default
 import qualified Data.HashMap.Strict as HM
-import qualified Data.List as L
-import Data.Maybe
-import Data.String.Interpolate.IsString
 import qualified Data.Text as T
-import Data.Time.Clock
-import Data.Time.Format
-import Network.Socket (PortNumber)
-import System.Directory
-import System.FilePath
-import System.IO
-import System.IO.Temp
-import System.Process
-import Test.Hspec
-import qualified Test.Hspec as H
-import Test.Hspec.Core.Spec
-import Test.Hspec.WebDriver.Internal.Types
 import Test.WebDriver
-import qualified Test.WebDriver as W
-import qualified Test.WebDriver.Capabilities as W
-import Test.WebDriver.Commands
-import qualified Test.WebDriver.Config as W
-import Test.WebDriver.Firefox.Profile
 
 -- | Default capabilities for regular Chrome.
 -- It's important to set the "browser" log level to "ALL" so that tests can collect browser logs.

@@ -1,9 +1,8 @@
-{-# LANGUAGE RecordWildCards, NamedFieldPuns, ScopedTypeVariables #-}
+{-# LANGUAGE NamedFieldPuns, ScopedTypeVariables #-}
 
 module Test.Hspec.WebDriver.Internal.Wrap where
 
 import Test.Hspec.Core.Spec
-
 
 labelify :: SpecWith [String] -> Spec
 labelify = addLabelsToTree (\labels () -> labels)

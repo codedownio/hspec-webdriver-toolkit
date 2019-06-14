@@ -2,34 +2,19 @@
 
 module Test.Hspec.WebDriver.Internal.Util where
 
-import Control.Concurrent
 import Control.Exception
 import qualified Control.Exception.Lifted as E
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Convertible
-import Data.Default
 import qualified Data.List as L
-import Data.Maybe
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
-import Data.Time.Clock
-import Data.Time.Format
-import Network.Socket (PortNumber)
 import System.Directory
 import System.FilePath
-import System.IO
-import System.IO.Temp
 import System.Process
-import Test.Hspec
-import qualified Test.Hspec as H
-import Test.Hspec.Core.Spec
 import Test.Hspec.WebDriver.Internal.Types
-import qualified Test.WebDriver as W
-import qualified Test.WebDriver.Capabilities as W
-import Test.WebDriver.Commands
-import qualified Test.WebDriver.Config as W
 
 getResultsDir' :: FilePath -> [String] -> FilePath
 getResultsDir' runRoot labels = runRoot </> "results" </> (L.intercalate "/" (reverse labels))

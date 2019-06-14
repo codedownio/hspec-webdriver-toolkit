@@ -9,12 +9,7 @@ import qualified Data.Text as T
 import GHC.Stack
 import Test.HUnit (assertEqual, assertFailure)
 import qualified Test.Hspec as H
-import Test.Hspec.Core.Spec
 import Test.WebDriver
-import qualified Test.WebDriver as W
-import qualified Test.WebDriver.Capabilities as W
-import qualified Test.WebDriver.Commands as W
-import qualified Test.WebDriver.Config as W
 
 -- | 'H.shouldBe' lifted into the 'WD' monad.
 shouldBe :: (HasCallStack, Show a, Eq a) => a -> a -> WD ()

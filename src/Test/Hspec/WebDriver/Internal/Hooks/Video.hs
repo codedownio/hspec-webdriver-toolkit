@@ -14,18 +14,15 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Bits
 import Data.Convertible
 import Data.Maybe
-import Data.String
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
 import GHC.Stack
-import Network.Socket hiding (send)
 import System.Directory
 import System.Environment
 import System.Exit
 import System.FilePath
 import System.IO
 import System.Process
-import System.Random
 import Test.Hspec.Core.Hooks
 import Test.Hspec.Core.Spec
 import Test.Hspec.WebDriver.Internal.Types
