@@ -15,6 +15,10 @@ import Test.WebDriver
 shouldBe :: (HasCallStack, Show a, Eq a) => a -> a -> WD ()
 x `shouldBe` y = liftIO $ x `H.shouldBe` y
 
+-- | 'H.shouldNotBe' lifted into the 'WD' monad.
+shouldNotBe :: (HasCallStack, Show a, Eq a) => a -> a -> WD ()
+x `shouldNotBe` y = liftIO $ x `H.shouldNotBe` y
+
 -- | Asserts that the given element matches the given tag.
 shouldBeTag :: (HasCallStack) => Element -> T.Text -> WD ()
 e `shouldBeTag` name = do

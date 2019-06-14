@@ -45,14 +45,14 @@ whenHeadlessDisplay action = do
     Just x | (x /= ":0") && (x /= ":1") -> action
     _ -> return ()
 
-withWindowFullscreen :: (HasCallStack) => WD a -> WD a
+withWindowFullscreen :: (HasCallStack) => IO a -> WD a
 withWindowFullscreen action = do
   originalPos <- getWindowPos
   originalSize <- getWindowSize
 
   bracket (setWindowFullScreen)
           (\() -> setWindowPos originalPos >> setWindowSize originalSize)
-          (\() -> action)
+          (\() -> liftIO action)
 
 #ifdef linux_HOST_OS
 getScreenResolution :: (HasCallStack) => IO (Int, Int)

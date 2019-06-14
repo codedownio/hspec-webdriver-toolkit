@@ -45,8 +45,6 @@ startWebDriver wdOptions@(WdOptions {toolsRoot, runRoot, capabilities}) = do
   hout <- openFile (logsDir </> seleniumOutFileName) AppendMode
   herr <- openFile (logsDir </> seleniumErrFileName) AppendMode
 
-  putStrLn "Waiting for selenium server"
-
   -- Start the process and wait for it to be ready
   (_, _, _, p) <- createProcess $ wdCreateProcess {
     std_in = Inherit
@@ -67,7 +65,6 @@ startWebDriver wdOptions@(WdOptions {toolsRoot, runRoot, capabilities}) = do
         t | readyMessage `T.isInfixOf` t -> return True
         _ -> return False
   unless success $ error [i|Selenium server failed to start after 60 seconds|]
-  putStrLn "Selenium server started!"
 
   -- Make the WdSession
   WdSession <$> pure []

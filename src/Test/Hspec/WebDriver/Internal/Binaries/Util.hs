@@ -2,13 +2,9 @@
 
 module Test.Hspec.WebDriver.Internal.Binaries.Util where
 
-import Control.Concurrent
-import qualified Control.Exception.Lifted as E
 import Data.Convertible
-import qualified Data.List as L
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
-import System.IO
 import qualified System.Info as SI
 import System.Process
 import Test.Hspec.WebDriver.Internal.Util

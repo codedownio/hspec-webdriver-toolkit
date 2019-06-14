@@ -33,7 +33,11 @@ module Test.Hspec.WebDriver.Toolkit (
   -- * Test helpers
   , runWithBrowser
   , runWithBrowser'
+  , runWithBrowser''
   , runEveryBrowser
+  , runEveryBrowser'
+  , executeWithBrowser
+  , closeAllSessionsExcept
   , closeAllSessions
   , getTestFolder
 
@@ -44,6 +48,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , WdSession
   , WdExample
   , getLabels
+  , getSessionMap
   , getResultsDir
   , WdOptions(..)
   , WhenToSave(..)
@@ -52,6 +57,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , module Test.Hspec.WebDriver.Toolkit.Expectations
   ) where
 
+import Control.Concurrent
 import Data.Time.Clock
 import Data.Time.Format
 import System.Directory
@@ -69,6 +75,7 @@ import Test.Hspec.WebDriver.Internal.Wrap
 import Test.Hspec.WebDriver.Toolkit.Capabilities
 import Test.Hspec.WebDriver.Toolkit.Expectations
 import qualified Test.WebDriver as W
+import qualified Test.WebDriver.Session as W
 
 
 -- | A good default set of hooks: `screenshotBeforeAndAfterTest`, `recordErrorVideos`, and `saveBrowserLogs`.
@@ -108,3 +115,6 @@ getTestFolder baseDir = do
   let testRoot = baseDir </> timestamp
   createDirectoryIfMissing True testRoot
   return testRoot
+
+getSessionMap :: WdSession -> MVar [(String, W.WDSession)]
+getSessionMap (WdSession {wdSessionMap}) = wdSessionMap
