@@ -1,41 +1,41 @@
 {-# LANGUAGE NamedFieldPuns, RecordWildCards, QuasiQuotes, ScopedTypeVariables, ViewPatterns #-}
 
-import Control.Concurrent
-import Control.Exception
-import Control.Monad
 import Data.Default
-import Data.String.Interpolate.IsString
-import Data.Time.Clock
-import Data.Time.Format
 import System.Directory
 import System.FilePath
-import System.IO.Temp
 import Test.Hspec
-import Test.Hspec.Core.Spec
-import Test.Hspec.WebDriver.Toolkit
-import qualified Test.WebDriver as W
-import qualified Test.WebDriver.Capabilities as W
+import Test.Hspec.WebDriver.Toolkit hiding (shouldBe)
 import Test.WebDriver.Commands
-import qualified Test.WebDriver.Config as W
 
-tests :: SpecType
+tests :: Spec
 tests = describe "Tookit tests" $ do
-  it "works" $ \_ -> pending
+  describe "Individual hook tests" $ do
+    it "can take screenshots before and after tests" $ do
+      cwd <- getCurrentDirectory
+      let toolsRoot = cwd </> "test_tools"
+      let runsRoot = cwd </> "test_runs"
+      createDirectoryIfMissing True toolsRoot
+      runRoot <- getTestFolder runsRoot
+      createDirectoryIfMissing True runRoot
+
+      let wdOptions = def { toolsRoot = toolsRoot
+                          , runRoot = runRoot
+                          , capabilities = chromeCapabilities
+                          }
+
+      hspec $ runWebDriver wdOptions screenshotBeforeAndAfterTest $ do
+        it "step_one" $ runWithBrowser "browser1" $ do
+          openPage "http://www.google.com"
+
+        it "step_two" $ runWithBrowser "browser1" $ do
+          openPage "http://www.xkcd.com"
+
+      doesFileExist (runRoot </> "results" </> "step_one" </> "browser1_after.png") >>= (`shouldBe` True)
+      doesFileExist (runRoot </> "results" </> "step_two" </> "browser1_before.png") >>= (`shouldBe` True)
+      doesFileExist (runRoot </> "results" </> "step_two" </> "browser1_after.png") >>= (`shouldBe` True)
+
+
+-- TODO: add a test for the fact that forward slashes in test labels result in extra directories
 
 main :: IO ()
-main = do
-  let testRoot = "/tmp/testroot"
-  let toolsRoot = testRoot </> "test_tools"
-  let runsRoot = testRoot </> "test_runs"
-  createDirectoryIfMissing True toolsRoot
-  runRoot <- getTestFolder runsRoot
-  createDirectoryIfMissing True runRoot
-
-  putStrLn [i|\n********** Test root: #{testRoot} **********|]
-
-  let wdOptions = def { toolsRoot = toolsRoot
-                      , runRoot = runRoot
-                      , capabilities = chromeCapabilities }
-
-  -- hspec $ runWebDriver wdOptions (screenshotBeforeAndAfterTest . recordEntireVideo . recordIndividualVideos . saveWebDriverLogs . saveBrowserLogs) tests
-  hspec $ runWebDriver wdOptions (recordTestTiming) tests
+main = hspec tests

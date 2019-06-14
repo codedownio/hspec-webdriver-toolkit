@@ -1,3 +1,5 @@
 .stack-work/
 hspec-webdriver-toolkit.cabal
 *~
+/test_tools
+/test_runs
