@@ -35,10 +35,20 @@ data WdOptions = WdOptions {
 
   , saveSeleniumMessageHistory :: WhenToSave
   -- ^ When to save a record of Selenium requests and responses
+
+  , runInsideXvfb :: Maybe XvfbConfig
   }
 
+data XvfbConfig = XvfbConfig {
+  xvfbResolution :: Maybe (Int, Int)
+  -- ^ Resolution for the virtual screen. Defaults to (1920, 1080)
+  }
+
+instance Default XvfbConfig where
+  def = XvfbConfig Nothing
+
 instance Default WdOptions where
-  def = WdOptions "" "" True def OnException
+  def = WdOptions "" "" True def OnException Nothing
 
 data WdSession = WdSession { wdLabels :: [String]
                            , wdWebDriver :: (Handle, Handle, ProcessHandle, FilePath, FilePath)

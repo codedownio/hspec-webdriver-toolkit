@@ -50,19 +50,6 @@ chromeDriver2_46 = [(Linux, "https://chromedriver.storage.googleapis.com/2.46/ch
                    , (OSX, "https://chromedriver.storage.googleapis.com/2.46/chromedriver_mac64.zip")
                    , (Windows, "https://chromedriver.storage.googleapis.com/2.46/chromedriver_win32.zip")]
 
-waitForMessage :: Handle -> String -> IO ()
-waitForMessage h msg = waitForMessage' h (reverse msg) ""
-  where
-    waitForMessage' :: Handle -> String -> String -> IO ()
-    waitForMessage' h msg partial = do
-      c <- getCharFile h
-      let newMsg = c : partial
-      if msg `L.isInfixOf` newMsg then return ()
-      else waitForMessage' h msg newMsg
-
-    getCharFile h = E.catch (hGetChar h) (\(_ :: IOError) -> (threadDelay 10000) >> (getCharFile h))
-
-
 -- | TODO: make sure this works on other platforms
 -- TODO: actually parse this out
 detectChromeMajorVersion :: IO (Either T.Text Int)

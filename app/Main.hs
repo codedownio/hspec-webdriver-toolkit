@@ -6,7 +6,8 @@ import Data.Default
 import Data.String.Interpolate.IsString
 import System.Directory
 import System.FilePath
-import Test.Hspec
+import Test.Hspec (hspec)
+import Test.Hspec.Core.Spec
 import Test.Hspec.WebDriver.Toolkit
 import Test.WebDriver.Commands
 
@@ -18,8 +19,10 @@ beforeAction sess@(getLabels -> labels) = do
 afterAction (getLabels -> labels) = do
   putStrLn $ "afterAction called with labels: " ++ show labels
 
+-- beforeWith beforeAction $ after afterAction
+
 tests :: SpecType
-tests = describe "Basic widget tests" $ beforeWith beforeAction $ after afterAction $ do
+tests = describe "Basic widget tests" $ do
   describe "Basic editing" $ do
     it "does the first thing" $ \(getLabels -> labels) -> do
       putStrLn $ "Doing the first thing: " <> show labels
@@ -46,7 +49,15 @@ main = do
 
   let wdOptions = def { toolsRoot = toolsRoot
                       , runRoot = runRoot
-                      , capabilities = chromeCapabilities }
+                      , capabilities = chromeCapabilities
+                      -- , runInsideXvfb = Just def
+                      }
 
-  -- hspec $ runWebDriver wdOptions (screenshotBeforeAndAfterTest . recordEntireVideo . recordIndividualVideos . saveWebDriverLogs . saveBrowserLogs) tests
-  hspec $ runWebDriver wdOptions (recordTestTiming) tests
+  -- hspec $ runWebDriver wdOptions (
+  --   screenshotBeforeAndAfterTest .
+  --   recordEntireVideo .
+  --   recordIndividualVideos .
+  --   saveWebDriverLogs .
+  --   saveBrowserLogs
+  --   ) tests
+  hspec $ runWebDriver wdOptions (recordTestTiming . saveWebDriverLogs) tests
