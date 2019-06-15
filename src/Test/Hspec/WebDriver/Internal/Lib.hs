@@ -83,16 +83,18 @@ executeWithBrowser browser session action = do
 
 closeSession :: Browser -> WdSession -> IO ()
 closeSession browser (WdSession {wdSessionMap}) = do
-  sessionMap <- readMVar wdSessionMap
-  whenJust (L.lookup browser sessionMap) $ \sess ->
-    W.runWD sess W.closeSession
+  modifyMVar_ wdSessionMap $ \sessionMap -> do
+    whenJust (L.lookup browser sessionMap) $ \sess ->
+      W.runWD sess W.closeSession
+    return [(b, s) | (b, s) <- sessionMap, b /= browser]
 
 closeAllSessionsExcept :: [Browser] -> WdSession -> IO ()
 closeAllSessionsExcept toKeep (WdSession {wdSessionMap}) = do
-  sessionMap <- readMVar wdSessionMap
-  forM_ sessionMap $ \(name, sess) -> unless (name `elem` toKeep) $
-    catch (W.runWD sess W.closeSession)
-          (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': '#{e}'|])
+  modifyMVar_ wdSessionMap $ \sessionMap -> do
+    forM_ sessionMap $ \(name, sess) -> unless (name `elem` toKeep) $
+      catch (W.runWD sess W.closeSession)
+            (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': '#{e}'|])
+    return [(b, s) | (b, s) <- sessionMap, b `elem` toKeep]
 
 closeAllSessions :: WdSession -> IO ()
 closeAllSessions = closeAllSessionsExcept []
