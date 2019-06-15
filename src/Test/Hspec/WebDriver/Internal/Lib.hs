@@ -27,26 +27,18 @@ instance Example WdExample where
 
   evaluateExample (WdExampleEveryBrowser action) _ act _ = do
     act $ \session@(WdSession {wdSessionMap}) -> do
-      resultVar <- newEmptyMVar
       sessionMap <- readMVar wdSessionMap
-      forM_ sessionMap $ \(browser, _) -> runActionWithBrowser resultVar browser action session
-      void $ takeMVar resultVar
+      forM_ sessionMap $ \(browser, _) -> do
+        resultVar <- newEmptyMVar
+        runActionWithBrowser resultVar browser action session
 
     return $ Result "" Success
 
   evaluateExample (WdExample browser action) _ act _ = do
     resultVar <- newEmptyMVar
     act $ runActionWithBrowser resultVar browser action
-    takeMVar resultVar
-
--- instance (W.WebDriver wd) => Example (wd ()) where
---   type Arg (wd ()) = ()
-
---   evaluateExample :: (HasCallStack) => wd () -> Params -> (ActionWith (Arg (wd ())) -> IO ()) -> ProgressCallback -> IO Result
---   evaluateExample action _ act _ = do
---     resultVar <- newEmptyMVar
---     act $ runActionWithBrowser resultVar "browser1" action
---     takeMVar resultVar
+    ret <- takeMVar resultVar
+    return ret
 
 
 runActionWithBrowser :: MVar Result -> Browser -> W.WD () -> WdSession -> IO ()
@@ -93,9 +85,9 @@ runEveryBrowser = WdExampleEveryBrowser
 
 runEveryBrowser' :: W.WD () -> WdSession -> IO ()
 runEveryBrowser' action session@(WdSession {wdSessionMap}) = do
-  resultVar <- newEmptyMVar
   sessionMap <- readMVar wdSessionMap
-  forM_ sessionMap $ \(browser, sess) -> do
+  forM_ sessionMap $ \(browser, _) -> do
+    resultVar <- newEmptyMVar
     runActionWithBrowser resultVar browser action session
 
 executeWithBrowser :: Browser -> WdSession -> W.WD () -> W.WD ()
