@@ -89,15 +89,12 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
     Nothing -> return Nothing
     Just (displayFilePath, (w, h)) -> do
       let retryPolicy = constantDelay 60000 <> limitRetries 1000
-      result <- retrying retryPolicy (\_ result -> return $ isLeft result) $ const $
+      recoverAll retryPolicy $ \_ ->
         readFile displayFilePath >>= \contents -> case readMay contents of
-          Nothing -> return $ Left [i|Couldn't determine X11 screen to use. Got data: '#{contents}'|]
-          Just x -> return $ Right $ XvfbSession { xvfbDisplayNum = x
-                                                 , xvfbXauthority = runRoot </> ".Xauthority"
-                                                 , xvfbDimensions = (w, h) }
-      case result of
-        Left err -> throwIO $ userError err
-        Right x -> return $ Just x
+          Nothing -> throwIO $ userError [i|Couldn't determine X11 screen to use. Got data: '#{contents}'|]
+          Just x -> return $ Just $ XvfbSession { xvfbDisplayNum = x
+                                                , xvfbXauthority = runRoot </> ".Xauthority"
+                                                , xvfbDimensions = (w, h) }
 
   -- Make the WdSession
   WdSession <$> pure []
