@@ -29,7 +29,6 @@ import Test.Hspec.WebDriver.Internal.Binaries
 import Test.Hspec.WebDriver.Internal.Hooks.Logs
 import Test.Hspec.WebDriver.Internal.Ports
 import Test.Hspec.WebDriver.Internal.Types
-import Test.Hspec.WebDriver.Internal.Util
 import qualified Test.WebDriver.Capabilities as W
 import qualified Test.WebDriver.Config as W
 
@@ -54,7 +53,7 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
 
   -- Get the CreateProcess
   createDirectoryIfMissing True toolsRoot
-  (wdCreateProcess, maybeXvfbSession) <- getWebdriverCreateProcess wdOptions port >>= \case
+  (wdCreateProcess, maybeDisplayFile) <- getWebdriverCreateProcess wdOptions port >>= \case
     Left err -> error [i|Failed to create webdriver process: '#{err}'|]
     Right x -> return x
 
@@ -85,6 +84,21 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
         _ -> return False
   unless success $ error [i|Selenium server failed to start after 60 seconds|]
 
+  -- When a displayfd filepath is provided, try to obtain the X11 screen
+  maybeXvfbSession <- case maybeDisplayFile of
+    Nothing -> return Nothing
+    Just (displayFilePath, (w, h)) -> do
+      let retryPolicy = constantDelay 60000 <> limitRetries 1000
+      result <- retrying retryPolicy (\_ result -> return $ isLeft result) $ const $
+        readFile displayFilePath >>= \contents -> case readMay contents of
+          Nothing -> return $ Left [i|Couldn't determine X11 screen to use. Got data: '#{contents}'|]
+          Just x -> return $ Right $ XvfbSession { xvfbDisplayNum = x
+                                                 , xvfbXauthority = runRoot </> ".Xauthority"
+                                                 , xvfbDimensions = (w, h) }
+      case result of
+        Left err -> throwIO $ userError err
+        Right x -> return $ Just x
+
   -- Make the WdSession
   WdSession <$> pure []
             <*> pure (hout, herr, p, logsDir </> seleniumOutFileName, logsDir </> seleniumErrFileName, maybeXvfbSession)
@@ -98,75 +112,58 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
 
 
 stopWebDriver :: WdSession -> IO ()
-stopWebDriver (WdSession {wdWebDriver=(hout, herr, h, _, _, maybeXvfbSession)}) = do
+stopWebDriver (WdSession {wdWebDriver=(hout, herr, h, _, _, _)}) = do
   terminateProcess h >> waitForProcess h
   hClose hout
   hClose herr
 
-  whenJust maybeXvfbSession $ \(XvfbSession {xvfbProcess}) -> do
-    terminateProcess xvfbProcess >> waitForProcess xvfbProcess
-
 -- * Util
 
-getWebdriverCreateProcess :: WdOptions -> PortNumber -> IO (Either T.Text (CreateProcess, Maybe XvfbSession))
+getWebdriverCreateProcess :: WdOptions -> PortNumber -> IO (Either T.Text (CreateProcess, Maybe (FilePath, (Int, Int))))
 getWebdriverCreateProcess (WdOptions {toolsRoot, runMode, runRoot}) port = runExceptT $ do
   chromeDriverPath <- ExceptT $ downloadChromeDriverIfNecessary toolsRoot
   seleniumPath <- ExceptT $ downloadSeleniumIfNecessary toolsRoot
 
   case runMode of
-    Normal -> return (proc "java" [
+    Normal -> return ((proc "java" [
                          [i|-Dwebdriver.chrome.driver=#{chromeDriverPath}|]
                          , "-jar", seleniumPath
                          , "-port", show port
-                         ]
+                         ]) { cwd = Just runRoot }
                          , Nothing)
 
     RunHeadless ->
       -- Headless mode is controlled in the capabilities
-      return (proc "java" [
+      return ((proc "java" [
                  [i|-Dwebdriver.chrome.driver=#{chromeDriverPath}|]
                  , "-jar", seleniumPath
                  , "-port", show port
-                 ]
+                 ]) { cwd = Just runRoot }
                  , Nothing)
 
 #ifdef linux_HOST_OS
-    RunInXvfb xvfbConfig -> do
-      xvfbSession@(XvfbSession {xvfbDisplayNum}) <- ExceptT $ getXvfbSession xvfbConfig
-
+    RunInXvfb (XvfbConfig {xvfbResolution}) -> do
+      let (w, h) = fromMaybe (1920, 1080) xvfbResolution
       liftIO $ createDirectoryIfMissing True runRoot
+
+      tmpDir <- liftIO getCanonicalTemporaryDirectory
+      (path, tmpHandle) <- liftIO $ openTempFile tmpDir "x11_server_num"
+      Fd fd <- liftIO $ handleToFd tmpHandle
 
       -- For reasons beyond me at the moment, this works properly when run with shell but not with proc;
       -- the latter results in Chrome failing to start with Gtk-WARNING **: (date): cannot open display: :109
       -- TODO: allow verbose logging to be controlled with an option:
-      return ((shell (unwords ["java"
+      return ((shell (unwords ["xvfb-run"
+                             , "--auto-servernum"
+                             , [i|--server-args="-screen 0 #{w}x#{h}x24 -displayfd #{fd}"|]
+                             , [i|--auth-file="#{runRoot </> ".Xauthority"}"|]
+                             , "java"
                              , [i|-Dwebdriver.chrome.driver=#{chromeDriverPath}|]
                              , [i|-Dwebdriver.chrome.logfile=#{runRoot </> "chromedriver.log"}|]
                              , [i|-Dwebdriver.chrome.verboseLogging=true|]
                              , "-jar", seleniumPath
                              , "-port", show port
-                             ])) { env = Just [("DISPLAY", show xvfbDisplayNum)] }
-                             , Just xvfbSession)
-
-
-getXvfbSession :: XvfbConfig -> IO (Either T.Text XvfbSession)
-getXvfbSession (XvfbConfig {xvfbResolution}) = leftOnException $ do
-  withSystemTempFile "x11_server_num" $ \path tmpHandle -> do
-    Fd fd <- handleToFd tmpHandle
-
-    let (w, h) = fromMaybe (1920, 1080) xvfbResolution
-
-    (_, _, _, h) <- createProcess ((proc "Xvfb" ["-displayfd", show fd
-                                               , "-screen", "0", [i|#{w}x#{h}x24])|]]
-                                                   ) { std_out = CreatePipe
-                                                     , std_err = CreatePipe })
-
-    let retryPolicy = constantDelay 60000 <> limitRetries 1000
-    retrying retryPolicy (\_ result -> return $ isLeft result) $ const $
-      readFile path >>= \contents -> case readMay contents of
-        Nothing -> return $ Left [i|Couldn't determine X11 screen to use. Got data: '#{contents}'|]
-        Just x -> return $ Right XvfbSession { xvfbProcess = h
-                                             , xvfbDisplayNum = x }
+                             ])) { cwd = Just runRoot }, Just (path, (w, h)))
 
 #else
     RunInXvfb (XvfbConfig { xvfbResolution }) -> error [i|RunInXvfb can only be used on Linux.|]

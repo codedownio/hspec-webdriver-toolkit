@@ -111,7 +111,9 @@ startWindowVideoRecording path videoSettings maybeXvfbSession = do
 
 startFullScreenVideoRecording :: (MonadIO m) => FilePath -> VideoSettings -> Maybe XvfbSession -> m (Handle, Handle, ProcessHandle, FilePath)
 startFullScreenVideoRecording path videoSettings maybeXvfbSession = do
-  (width, height) <- liftIO getScreenResolution
+  (width, height) <- case maybeXvfbSession of
+    Just (XvfbSession {xvfbDimensions}) -> return xvfbDimensions
+    Nothing -> liftIO getScreenResolution
   liftIO $ startVideoRecording path (fromIntegral width, fromIntegral height, 0, 0) videoSettings maybeXvfbSession
 
 startVideoRecording :: (MonadIO m) => FilePath -> (Word, Word, Int, Int) -> VideoSettings -> Maybe XvfbSession -> m (Handle, Handle, ProcessHandle, FilePath)
@@ -119,10 +121,16 @@ startVideoRecording path (width, height, x, y) (VideoSettings {..}) maybeXvfbSes
 #ifdef linux_HOST_OS
   displayNum <- case maybeXvfbSession of
     Nothing -> fromMaybe "" <$> (liftIO $ lookupEnv "DISPLAY")
-    Just (XvfbSession {xvfbDisplayNum}) -> return $ show xvfbDisplayNum
+    Just (XvfbSession {xvfbDisplayNum}) -> return $ ":" <> show xvfbDisplayNum
+
+
 
   let executable = "ffmpeg"
   let videoPath = [i|#{path}.avi|]
+  let env' = [("DISPLAY", displayNum)]
+  let env = case maybeXvfbSession of
+       Nothing -> Just env'
+       Just (XvfbSession {xvfbXauthority}) -> Just (("XAUTHORITY", xvfbXauthority) : env')
   let cmd = ["-draw_mouse", (if hideMouseWhenRecording then "0" else "1")
             , "-y"
             , "-nostdin"
@@ -137,6 +145,7 @@ startVideoRecording path (width, height, x, y) (VideoSettings {..}) maybeXvfbSes
   maybeScreenNumber <- liftIO getMacScreenNumber
   let executable = "ffmpeg"
   let videoPath = [i|#{path}.avi|]
+  let env = Nothing
   let cmd = case maybeScreenNumber of
     Just screenNumber -> ["-y"
                          , "-nostdin"
@@ -150,6 +159,7 @@ startVideoRecording path (width, height, x, y) (VideoSettings {..}) maybeXvfbSes
 #ifdef mingw32_HOST_OS
   let executable = "ffmpeg.exe"
   let videoPath = [i|#{path}.mkv|]
+  let env = Nothing
   let cmd = ["-f", "gdigrab"
             , "-nostdin"
             , "-draw_mouse", (if hideMouseWhenRecording then "0" else "1")
@@ -166,7 +176,8 @@ startVideoRecording path (width, height, x, y) (VideoSettings {..}) maybeXvfbSes
                                   { create_group = True
                                   , std_in = NoStream
                                   , std_out = UseHandle outfile
-                                  , std_err = UseHandle errfile }
+                                  , std_err = UseHandle errfile
+                                  , env = env }
 
   return (outfile, errfile, h, videoPath)
 

@@ -82,8 +82,9 @@ data WdExample = WdExample { wdBrowser :: Browser
                | WdPending { wdPendingMsg :: Maybe String }
 
 
-data XvfbSession = XvfbSession { xvfbProcess :: ProcessHandle
-                               , xvfbDisplayNum :: Int }
+data XvfbSession = XvfbSession { xvfbDisplayNum :: Int
+                               , xvfbXauthority :: FilePath
+                               , xvfbDimensions :: (Int, Int) }
 
 instance Show XvfbSession where
   show (XvfbSession {xvfbDisplayNum}) = [i|<XVFB session with server num #{xvfbDisplayNum}>|]
