@@ -2,7 +2,6 @@
 module Main where
 
 import Control.Monad.IO.Class
-import Data.Default
 import Data.String.Interpolate.IsString
 import System.Directory
 import System.FilePath
@@ -11,27 +10,24 @@ import Test.Hspec.Core.Spec
 import Test.Hspec.WebDriver.Toolkit
 import Test.WebDriver.Commands
 
-beforeAction :: WdSession -> IO WdSession
-beforeAction sess@(getLabels -> labels) = do
-  putStrLn $ "beforeAction called with labels: " ++ show labels
-  return sess
-
-afterAction (getLabels -> labels) = do
-  putStrLn $ "afterAction called with labels: " ++ show labels
-
--- beforeWith beforeAction $ after afterAction
 
 tests :: SpecType
 tests = describe "Basic widget tests" $ do
   describe "Basic editing" $ do
-    it "does the first thing" $ \(getLabels -> labels) -> do
-      putStrLn $ "Doing the first thing: " <> show labels
+    it "does the first thing" $ runWithBrowser "browser1" $ do
+      2 `shouldBe` 2
 
     it "does the second thing" $ \_ -> do
       putStrLn "Doing the first thing"
 
     it "starts a browser" $ runWithBrowser "browser1" $ do
       openPage "http://www.google.com"
+
+      elem <- findElem (ByCSS "input[title=Search]")
+      liftIO $ putStrLn [i|Found elem: #{elem}|]
+      2 `shouldBe` 2
+      -- click elem
+      -- sendKeys "hello world" elem
 
     it "starts another browser" $ runWithBrowser "browser2" $ do
       openPage "http://www.yahoo.com"
@@ -47,11 +43,10 @@ main = do
 
   putStrLn [i|\n********** Test root: #{testRoot} **********|]
 
-  let wdOptions = def { toolsRoot = toolsRoot
-                      , runRoot = runRoot
-                      , capabilities = chromeCapabilities
-                      -- , runInsideXvfb = Just def
-                      }
+  let wdOptions = (defaultWdOptions toolsRoot runRoot) {
+        capabilities = chromeCapabilities
+        , runMode = RunHeadless
+        }
 
   -- hspec $ runWebDriver wdOptions (
   --   screenshotBeforeAndAfterTest .
@@ -60,4 +55,4 @@ main = do
   --   saveWebDriverLogs .
   --   saveBrowserLogs
   --   ) tests
-  hspec $ runWebDriver wdOptions (recordTestTiming . saveWebDriverLogs) tests
+  hspec $ runWebDriver wdOptions (recordTestTiming . saveWebDriverLogs . recordEntireVideo) tests

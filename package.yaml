@@ -65,6 +65,12 @@ library:
   source-dirs: src
   ghc-options:
     - -W
+  exposed-modules:
+    - Test.Hspec.WebDriver.Toolkit
+    - Test.Hspec.WebDriver.Toolkit.Capabilities
+    - Test.Hspec.WebDriver.Toolkit.Expectations
+    - Test.Hspec.WebDriver.Toolkit.Waits
+    - Test.Hspec.WebDriver.Toolkit.Window
 
 executables:
   hspec-webdriver-toolkit-exe:

@@ -1,9 +1,13 @@
-{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes, LambdaCase, Rank2Types #-}
+{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, Rank2Types #-}
 
 module Test.Hspec.WebDriver.Toolkit (
-  -- * Main functions
+  -- * Main hooks
   runWebDriver
-  , runWebDriverXvfb
+  , WdOptions(..)
+  , defaultWdOptions
+  , RunMode(..)
+  , XvfbConfig(..)
+  , WhenToSave(..)
 
   -- * Hooks
 
@@ -40,24 +44,26 @@ module Test.Hspec.WebDriver.Toolkit (
   , closeAllSessionsExcept
   , closeAllSessions
   , getTestFolder
+  , beforeAllWith
+  , withCustomLogFailing
 
   -- * Types
   , Hook
   , SpecType
   , Browser
+  , ToolsRoot
+  , RunRoot
   , WdSession
   , WdExample
-  , getLabels
   , getSessionMap
   , getResultsDir
-  , WdOptions(..)
-  , WhenToSave(..)
 
   , module Test.Hspec.WebDriver.Toolkit.Capabilities
   , module Test.Hspec.WebDriver.Toolkit.Expectations
   ) where
 
 import Control.Concurrent
+import Control.Exception
 import Data.Time.Clock
 import Data.Time.Format
 import System.Directory
@@ -68,6 +74,7 @@ import Test.Hspec.WebDriver.Internal.Hooks.Screenshots
 import Test.Hspec.WebDriver.Internal.Hooks.Timing
 import Test.Hspec.WebDriver.Internal.Hooks.Video
 import Test.Hspec.WebDriver.Internal.Lib
+import Test.Hspec.WebDriver.Internal.Misc
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
 import Test.Hspec.WebDriver.Internal.WebDriver
@@ -99,15 +106,6 @@ runWebDriver wdOptions hooks tests =
   hooks $
   tests
 
--- | Same as runWebDriver, but runs the entire test session inside XVFB (https://en.wikipedia.org/wiki/Xvfb)
--- so that tests run in their own X11 display.
--- For development, this makes tests more reproducible because the screen resolution can be fixed, and it
--- avoids cluttering your system with browser windows.
--- This is also a great way to run Selenium tests on a CI server.
--- Linux only.
-runWebDriverXvfb :: WdOptions -> W.Capabilities -> Hook -> SpecWith WdSession -> IO ()
-runWebDriverXvfb = undefined
-
 -- | Create a timestamp-named folder to contain the results of a given test run
 getTestFolder :: FilePath -> IO FilePath
 getTestFolder baseDir = do
@@ -118,3 +116,11 @@ getTestFolder baseDir = do
 
 getSessionMap :: WdSession -> MVar [(String, W.WDSession)]
 getSessionMap (WdSession {wdSessionMap}) = wdSessionMap
+
+
+-- | Change the log failing function for all functions in this test.
+withCustomLogFailing :: (W.LogEntry -> Bool) -> SpecType -> SpecType
+withCustomLogFailing newFailureFn = aroundWith $ \action session@(WdSession {wdLogFailureFn}) -> do
+  bracket (modifyMVar wdLogFailureFn (\current -> return (newFailureFn, current)))
+          (\oldFailureFn -> modifyMVar_ wdLogFailureFn $ const $ return oldFailureFn)
+          (\_ -> action session)

@@ -18,17 +18,31 @@ type SpecType = SpecWith WdSession
 
 type Hook = (HasCallStack) => SpecType -> SpecType
 
+type ToolsRoot = FilePath
+type RunRoot = FilePath
+
 data WhenToSave = Always | OnException | Never deriving (Show, Eq)
 
+-- | Headless and Xvfb modes are useful because they allow you to run tests in the background, without popping up browser windows.
+-- This is useful for development or for running on a CI server, and is also more reproducible since the screen resolution can be fixed.
+-- In addition, Xvfb mode allows videos to be recorded of tests.
+data RunMode = Normal
+             -- ^ Normal Selenium behavior; will pop up a web browser.
+             | RunHeadless
+             -- ^ Run with a headless browser. Supports screenshots but videos will be black.
+             | RunInXvfb XvfbConfig
+             -- ^ Run inside <https://en.wikipedia.org/wiki/Xvfb Xvfb> so that tests run in their own X11 display.
+             -- xvfb-run script must be installed and on the PATH.
+
 data WdOptions = WdOptions {
-  toolsRoot :: FilePath
-  -- ^ Folder where any necessary binaries (chromedriver, Seleniu, etc.) will be downloaded if needed
+  toolsRoot :: ToolsRoot
+  -- ^ Folder where any necessary binaries (chromedriver, Selenium, etc.) will be downloaded if needed. Required.
 
-  , runRoot :: FilePath
-  -- ^ Folder where information for a specific run should be kept. Defaults to testRoot </> "test_runs" </> timestamp
+  , runRoot :: RunRoot
+  -- ^ Folder where information for a specific run should be kept. Required.
 
-  , skipRemainingTestsAfterFailure :: Bool
-  -- ^ Whether to skip the rest of the tests once one fails
+  , logFailureFn :: W.LogEntry -> Bool
+  -- ^ A function to apply to browser logs at the end of every test. If it returns true, the test is failed. Can be used to fail tests if certain browser logs are found (for example, all 'LogSevere' logs). Defaults to @const False@.
 
   , capabilities :: W.Capabilities
   -- ^ The WebDriver capabilities to use
@@ -36,7 +50,8 @@ data WdOptions = WdOptions {
   , saveSeleniumMessageHistory :: WhenToSave
   -- ^ When to save a record of Selenium requests and responses
 
-  , runInsideXvfb :: Maybe XvfbConfig
+  , runMode :: RunMode
+  -- ^ How to handle opening the browser (in a popup window, headless, etc.)
   }
 
 data XvfbConfig = XvfbConfig {
@@ -47,8 +62,8 @@ data XvfbConfig = XvfbConfig {
 instance Default XvfbConfig where
   def = XvfbConfig Nothing
 
-instance Default WdOptions where
-  def = WdOptions "" "" True def OnException Nothing
+defaultWdOptions :: FilePath -> FilePath -> WdOptions
+defaultWdOptions toolsRoot runRoot = WdOptions toolsRoot runRoot (const False) def OnException Normal
 
 data WdSession = WdSession { wdLabels :: [String]
                            , wdWebDriver :: (Handle, Handle, ProcessHandle, FilePath, FilePath)
@@ -57,12 +72,10 @@ data WdSession = WdSession { wdLabels :: [String]
                            , wdFailureCounter :: MVar Int
                            , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle))
                            , wdTimingInfo :: MVar A.Value
+                           , wdLogFailureFn :: MVar (W.LogEntry -> Bool)
                            , wdConfig :: W.WDConfig }
 
 data WdExample = WdExample { wdBrowser :: Browser
                            , wdAction :: W.WD () }
                | WdExampleEveryBrowser { wdAction :: W.WD () }
                | WdPending { wdPendingMsg :: Maybe String }
-
-getLabels :: WdSession -> [String]
-getLabels (WdSession {wdLabels}) = wdLabels
