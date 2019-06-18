@@ -36,7 +36,7 @@ instance Example WdExample where
     return $ Result "" Success
 
 
-runActionWithBrowser :: Browser -> W.WD () -> WdSession -> IO ()
+runActionWithBrowser :: Browser -> W.WD a -> WdSession -> IO a
 runActionWithBrowser browser action sessionWithLabels@(WdSession {..}) = do
   -- Create new session if necessary (this can throw an exception)
   sess <- modifyMVar wdSessionMap $ \sessionMap -> case L.lookup browser sessionMap of
@@ -52,20 +52,15 @@ runActionWithBrowser browser action sessionWithLabels@(WdSession {..}) = do
       saveSessionHistoryIfConfigured sessionWithLabels
       handleTestException sessionWithLabels e
       throw e -- Rethrow for the test framework to handle
-    Right () -> do
+    Right x -> do
       liftIO $ saveSessionHistoryIfConfigured sessionWithLabels
-      return ()
+      return x
 
 runWithBrowser :: Browser -> W.WD () -> WdExample
 runWithBrowser = WdExample
 
-runWithBrowser' :: Browser -> W.WD () -> WdSession -> IO WdSession
+runWithBrowser' :: Browser -> W.WD () -> WdSession -> IO ()
 runWithBrowser' browser action session = do
-  runWithBrowser'' browser action session
-  return session
-
-runWithBrowser'' :: Browser -> W.WD () -> WdSession -> IO ()
-runWithBrowser'' browser action session = do
   runActionWithBrowser browser action session
 
 runEveryBrowser :: W.WD () -> WdExample
@@ -77,7 +72,7 @@ runEveryBrowser' action session@(WdSession {wdSessionMap}) = do
   forM_ sessionMap $ \(browser, _) -> do
     runActionWithBrowser browser action session
 
-executeWithBrowser :: Browser -> WdSession -> W.WD () -> W.WD ()
+executeWithBrowser :: Browser -> WdSession -> W.WD a -> W.WD a
 executeWithBrowser browser session action = do
   liftIO $ runActionWithBrowser browser action session
 

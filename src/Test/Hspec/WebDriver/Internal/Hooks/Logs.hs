@@ -22,6 +22,7 @@ import System.Directory
 import System.FilePath
 import System.IO
 import Test.Hspec
+import Test.Hspec.WebDriver.Internal.Misc
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
 import Test.WebDriver
@@ -40,11 +41,12 @@ failOnSevereBrowserLogs = failOnCertainBrowserLogs predicate
 
 -- | Fail a test when logs matching a predicate are found.
 failOnCertainBrowserLogs :: (LogEntry -> Bool) -> Hook
-failOnCertainBrowserLogs predicate = undefined
+failOnCertainBrowserLogs predicate = beforeAllWith $ \(WdSession {wdLogFailureFn}) ->
+  modifyMVar_ wdLogFailureFn $ const $ return predicate
 
 -- | Save the webdriver logs for each test to the results directory.
 saveWebDriverLogs :: Hook
-saveWebDriverLogs = after $ \sess@(WdSession {wdWebDriver=(_, _, _, stdoutPath, stderrPath)}) -> do
+saveWebDriverLogs = after $ \sess@(WdSession {wdWebDriver=(_, _, _, stdoutPath, stderrPath, _)}) -> do
   let resultsDir = getResultsDir sess
   createDirectoryIfMissing True resultsDir
   moveAndTruncate stdoutPath (resultsDir </> seleniumOutFileName)

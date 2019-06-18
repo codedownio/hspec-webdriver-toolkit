@@ -38,7 +38,6 @@ module Test.Hspec.WebDriver.Toolkit (
   -- * Test helpers
   , runWithBrowser
   , runWithBrowser'
-  , runWithBrowser''
   , runEveryBrowser
   , runEveryBrowser'
   , executeWithBrowser
@@ -46,6 +45,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , closeAllSessions
   , getTestFolder
   , beforeAllWith
+  , beforeWith'
   , withCustomLogFailing
 
   -- * Types

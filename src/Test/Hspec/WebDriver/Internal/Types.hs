@@ -5,6 +5,7 @@ module Test.Hspec.WebDriver.Internal.Types where
 import Control.Concurrent.MVar
 import qualified Data.Aeson as A
 import Data.Default
+import Data.String.Interpolate.IsString
 import GHC.Stack
 import System.IO
 import System.Process
@@ -66,7 +67,7 @@ defaultWdOptions :: FilePath -> FilePath -> WdOptions
 defaultWdOptions toolsRoot runRoot = WdOptions toolsRoot runRoot (const False) def OnException Normal
 
 data WdSession = WdSession { wdLabels :: [String]
-                           , wdWebDriver :: (Handle, Handle, ProcessHandle, FilePath, FilePath)
+                           , wdWebDriver :: (Handle, Handle, ProcessHandle, FilePath, FilePath, Maybe XvfbSession)
                            , wdOptions :: WdOptions
                            , wdSessionMap :: MVar [(Browser, W.WDSession)]
                            , wdFailureCounter :: MVar Int
@@ -80,6 +81,12 @@ data WdExample = WdExample { wdBrowser :: Browser
                | WdExampleEveryBrowser { wdAction :: W.WD () }
                | WdPending { wdPendingMsg :: Maybe String }
 
+
+data XvfbSession = XvfbSession { xvfbProcess :: ProcessHandle
+                               , xvfbDisplayNum :: Int }
+
+instance Show XvfbSession where
+  show (XvfbSession {xvfbDisplayNum}) = [i|<XVFB session with server num #{xvfbDisplayNum}>|]
 
 -- * Video stuff
 

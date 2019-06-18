@@ -42,12 +42,11 @@ import Safe
 -- | Record a single video of the entire test
 recordEntireVideo :: (HasCallStack) => VideoSettings -> SpecType -> SpecType
 recordEntireVideo videoSettings = beforeAllHook . afterAllHook
-  where beforeAllHook = beforeAllWith $ \sess@(WdSession {wdOptions=(WdOptions {runRoot}), wdEntireTestRunVideo}) -> do
+  where beforeAllHook = beforeAllWith $ \sess@(WdSession {wdOptions=(WdOptions {runRoot}), wdEntireTestRunVideo, wdWebDriver=(_, _, _, _, _, maybeXvfbSession)}) -> do
           modifyMVar_ wdEntireTestRunVideo $ \maybeProcess -> case maybeProcess of
             Nothing -> handle (\(e :: SomeException) -> putStrLn [i|Error in recordEntireVideo: '#{e}'|] >> return Nothing)
-                              (Just <$> (startFullScreenVideoRecording (runRoot </> "video") videoSettings))
+                              (Just <$> (startFullScreenVideoRecording (runRoot </> "video") videoSettings maybeXvfbSession))
             Just _ -> return maybeProcess
-          return sess
 
         afterAllHook = afterAll $ \(WdSession {wdEntireTestRunVideo}) -> do
           maybeVideoProcess <- readMVar wdEntireTestRunVideo
@@ -55,40 +54,35 @@ recordEntireVideo videoSettings = beforeAllHook . afterAllHook
 
 -- | Record videos of each test
 recordIndividualVideos :: (HasCallStack) => VideoSettings -> SpecType -> SpecType
-recordIndividualVideos videoSettings = aroundWith $ \action session@(WdSession {wdLabels, wdOptions=(WdOptions {runRoot})}) -> do
+recordIndividualVideos videoSettings = aroundWith $ \action session@(WdSession {wdLabels, wdOptions=(WdOptions {runRoot}), wdWebDriver=(_, _, _, _, _, maybeXvfbSession)}) -> do
   let resultsDir = (getResultsDir session)
   createDirectoryIfMissing True resultsDir
-  E.bracket (startFullScreenVideoRecording (resultsDir </> "video") videoSettings)
+  E.bracket (startFullScreenVideoRecording (resultsDir </> "individual_video") videoSettings maybeXvfbSession)
             (\(hout, herr, h, _) -> endVideoRecording (hout, herr, h))
             (const $ action session)
 
 -- | Record videos of each test, but delete them unless the test fails.
 recordErrorVideos :: (HasCallStack) => VideoSettings -> SpecType -> SpecType
-recordErrorVideos videoSettings = aroundWithHook . beforeHook
+recordErrorVideos videoSettings = aroundWithHook
   where
-    beforeHook = beforeWith $ \session -> do
+    aroundWithHook = aroundWith $ \action session@(WdSession {wdLabels, wdOptions=(WdOptions {runRoot}), wdWebDriver=(_, _, _, _, _, maybeXvfbSession)}) -> do
       let resultsDir = getResultsDir session
-      liftIO $ putStrLn [i|Got resultsDir in beforeHook: #{resultsDir}|]
-      return session
-
-    aroundWithHook = aroundWith $ \action session@(WdSession {wdLabels, wdOptions=(WdOptions {runRoot})}) -> do
-      let resultsDir = getResultsDir session
-      liftIO $ putStrLn [i|Got resultsDir: #{resultsDir}. Labels: #{wdLabels}|]
       createDirectoryIfMissing True resultsDir
       testFailedVar <- newMVar False
-      E.bracket (startFullScreenVideoRecording (resultsDir </> "video") videoSettings)
+      E.bracket (startFullScreenVideoRecording (resultsDir </> "error_video") videoSettings maybeXvfbSession)
                 (\(hout, herr, h, path) -> do
                     endVideoRecording (hout, herr, h)
                     testFailed <- readMVar testFailedVar
-                    unless testFailed $ removePathForcibly path
+                    unless testFailed $ do
+                      removePathForcibly path
+                      removePathForcibly (resultsDir </> ("error_video_" <> ffmpegOutfile))
+                      removePathForcibly (resultsDir </> ("error_video_" <> ffmpegErrfile))
                 )
-                (const $ do
-                    eitherResult :: Either SomeException () <- try $ action session
-                    case eitherResult of
-                      Left err -> do
-                        liftIO $ putStrLn [i|recordErrorVideos got error: #{err}|]
-                        throwIO err
-                      Right () -> modifyMVar_ testFailedVar $ const $ return True
+                (const $ (try $ action session) >>= \case
+                    Left (err :: SomeException) -> do
+                      modifyMVar_ testFailedVar $ const $ return True
+                      throwIO err
+                    Right () -> return ()
                 )
 
 -- * Video util functions
@@ -98,32 +92,34 @@ ffmpegOutfile = "ffmpeg_stdout.txt"
 ffmpegErrfile :: String
 ffmpegErrfile = "ffmpeg_stderr.txt"
 
-withVideoRecording :: FilePath -> VideoSettings -> WD () -> WD ()
-withVideoRecording path videoSettings action = do
+withVideoRecording :: FilePath -> VideoSettings -> Maybe XvfbSession -> WD () -> WD ()
+withVideoRecording path videoSettings maybeXvfbSession action = do
   (width, height) <- getWindowSize
   (x, y) <- getWindowPos
-  withVideoRecording' path videoSettings (width, height, x, y) action
+  withVideoRecording' path videoSettings maybeXvfbSession (width, height, x, y) action
 
-withFullScreenVideoRecording :: (MonadIO m, MonadBaseControl IO m) => FilePath -> VideoSettings -> m a -> m a
-withFullScreenVideoRecording path videoSettings action = do
+withFullScreenVideoRecording :: (MonadIO m, MonadBaseControl IO m) => FilePath -> VideoSettings -> Maybe XvfbSession -> m a -> m a
+withFullScreenVideoRecording path videoSettings maybeXvfbSession action = do
   (width, height) <- liftIO getScreenResolution
-  withVideoRecording' path videoSettings (fromIntegral width, fromIntegral height, 0, 0) action
+  withVideoRecording' path videoSettings maybeXvfbSession (fromIntegral width, fromIntegral height, 0, 0) action
 
-startWindowVideoRecording :: FilePath -> VideoSettings -> WD (Handle, Handle, ProcessHandle, FilePath)
-startWindowVideoRecording path videoSettings = do
+startWindowVideoRecording :: FilePath -> VideoSettings -> Maybe XvfbSession -> WD (Handle, Handle, ProcessHandle, FilePath)
+startWindowVideoRecording path videoSettings maybeXvfbSession = do
   (width, height) <- getWindowSize
   (x, y) <- getWindowPos
-  liftIO $ startVideoRecording path (width, height, x, y) videoSettings
+  liftIO $ startVideoRecording path (width, height, x, y) videoSettings maybeXvfbSession
 
-startFullScreenVideoRecording :: (MonadIO m) => FilePath -> VideoSettings -> m (Handle, Handle, ProcessHandle, FilePath)
-startFullScreenVideoRecording path videoSettings  = do
+startFullScreenVideoRecording :: (MonadIO m) => FilePath -> VideoSettings -> Maybe XvfbSession -> m (Handle, Handle, ProcessHandle, FilePath)
+startFullScreenVideoRecording path videoSettings maybeXvfbSession = do
   (width, height) <- liftIO getScreenResolution
-  liftIO $ startVideoRecording path (fromIntegral width, fromIntegral height, 0, 0) videoSettings
+  liftIO $ startVideoRecording path (fromIntegral width, fromIntegral height, 0, 0) videoSettings maybeXvfbSession
 
-startVideoRecording :: (MonadIO m) => FilePath -> (Word, Word, Int, Int) -> VideoSettings -> m (Handle, Handle, ProcessHandle, FilePath)
-startVideoRecording path (width, height, x, y) (VideoSettings {..}) = liftIO $ do
+startVideoRecording :: (MonadIO m) => FilePath -> (Word, Word, Int, Int) -> VideoSettings -> Maybe XvfbSession -> m (Handle, Handle, ProcessHandle, FilePath)
+startVideoRecording path (width, height, x, y) (VideoSettings {..}) maybeXvfbSession = liftIO $ do
 #ifdef linux_HOST_OS
-  displayNum <- fromMaybe "" <$> (liftIO $ lookupEnv "DISPLAY")
+  displayNum <- case maybeXvfbSession of
+    Nothing -> fromMaybe "" <$> (liftIO $ lookupEnv "DISPLAY")
+    Just (XvfbSession {xvfbDisplayNum}) -> return $ show xvfbDisplayNum
 
   let executable = "ffmpeg"
   let videoPath = [i|#{path}.avi|]
@@ -187,9 +183,9 @@ endVideoRecording (outfile, errfile, h) = liftIO $ do
     ExitFailure n -> return ()
     -- ExitFailure n -> putStrLn [i|Error: ffmpeg exited with nonzero exit code #{n}'|]
 
-withVideoRecording' :: (MonadIO m, MonadBaseControl IO m) => FilePath -> VideoSettings -> (Word, Word, Int, Int) -> m a -> m a
-withVideoRecording' path videoSettings dimensions action =
-  E.bracket (startVideoRecording path dimensions videoSettings)
+withVideoRecording' :: (MonadIO m, MonadBaseControl IO m) => FilePath -> VideoSettings -> Maybe XvfbSession -> (Word, Word, Int, Int) -> m a -> m a
+withVideoRecording' path videoSettings maybeXvfbSession dimensions action =
+  E.bracket (startVideoRecording path dimensions videoSettings maybeXvfbSession)
             (\(hout, herr, h, _) -> endVideoRecording (hout, herr, h))
             (const action)
 
