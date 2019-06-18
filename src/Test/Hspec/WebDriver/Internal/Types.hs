@@ -70,7 +70,7 @@ data WdSession = WdSession { wdLabels :: [String]
                            , wdOptions :: WdOptions
                            , wdSessionMap :: MVar [(Browser, W.WDSession)]
                            , wdFailureCounter :: MVar Int
-                           , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle))
+                           , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle, FilePath))
                            , wdTimingInfo :: MVar A.Value
                            , wdLogFailureFn :: MVar (W.LogEntry -> Bool)
                            , wdConfig :: W.WDConfig }
@@ -84,7 +84,7 @@ data WdExample = WdExample { wdBrowser :: Browser
 -- * Video stuff
 
 fastX11VideoOptions = ["-an"
-                      --, "-r", "30"
+                      , "-r", "30"
                       , "-vcodec"
                       , "libxvid"
                       , "-qscale:v", "1"

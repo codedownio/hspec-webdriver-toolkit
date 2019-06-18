@@ -30,7 +30,7 @@ tests = describe "Basic widget tests" $ do
       -- sendKeys "hello world" elem
 
     it "starts another browser" $ runWithBrowser "browser2" $ do
-      openPage "http://www.yahoo.com"
+      openPage "http://www.xkcd.com"
 
 main :: IO ()
 main = do
@@ -57,5 +57,6 @@ main = do
   --   ) tests
   hspec $ runWebDriver wdOptions (recordTestTiming
                                   . saveWebDriverLogs
-                                  . recordEntireVideo (def {hideMouseWhenRecording = True})
+                                  . recordEntireVideo def
+                                  . recordErrorVideos def
                                  ) tests

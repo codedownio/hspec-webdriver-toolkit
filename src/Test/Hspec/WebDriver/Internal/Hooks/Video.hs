@@ -11,7 +11,6 @@ import Control.Exception.Lifted as E
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Bits
 import Data.Convertible
 import Data.Maybe
 import Data.String.Interpolate.IsString
@@ -24,7 +23,6 @@ import System.FilePath
 import System.IO
 import System.Process
 import Test.Hspec.Core.Hooks
-import Test.Hspec.Core.Spec
 import Test.Hspec.WebDriver.Internal.Misc
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
@@ -53,20 +51,45 @@ recordEntireVideo videoSettings = beforeAllHook . afterAllHook
 
         afterAllHook = afterAll $ \(WdSession {wdEntireTestRunVideo}) -> do
           maybeVideoProcess <- readMVar wdEntireTestRunVideo
-          whenJust maybeVideoProcess endVideoRecording
+          whenJust maybeVideoProcess $ \(hout, herr, h, _) -> endVideoRecording (hout, herr, h)
 
 -- | Record videos of each test
 recordIndividualVideos :: (HasCallStack) => VideoSettings -> SpecType -> SpecType
-recordIndividualVideos videoSettings = aroundWith $ \action -> \session@(WdSession {wdLabels, wdOptions=(WdOptions {runRoot})}) -> do
+recordIndividualVideos videoSettings = aroundWith $ \action session@(WdSession {wdLabels, wdOptions=(WdOptions {runRoot})}) -> do
   let resultsDir = (getResultsDir session)
   createDirectoryIfMissing True resultsDir
   E.bracket (startFullScreenVideoRecording (resultsDir </> "video") videoSettings)
-            (endVideoRecording)
+            (\(hout, herr, h, _) -> endVideoRecording (hout, herr, h))
             (const $ action session)
 
 -- | Record videos of each test, but delete them unless the test fails.
 recordErrorVideos :: (HasCallStack) => VideoSettings -> SpecType -> SpecType
-recordErrorVideos = undefined
+recordErrorVideos videoSettings = aroundWithHook . beforeHook
+  where
+    beforeHook = beforeWith $ \session -> do
+      let resultsDir = getResultsDir session
+      liftIO $ putStrLn [i|Got resultsDir in beforeHook: #{resultsDir}|]
+      return session
+
+    aroundWithHook = aroundWith $ \action session@(WdSession {wdLabels, wdOptions=(WdOptions {runRoot})}) -> do
+      let resultsDir = getResultsDir session
+      liftIO $ putStrLn [i|Got resultsDir: #{resultsDir}. Labels: #{wdLabels}|]
+      createDirectoryIfMissing True resultsDir
+      testFailedVar <- newMVar False
+      E.bracket (startFullScreenVideoRecording (resultsDir </> "video") videoSettings)
+                (\(hout, herr, h, path) -> do
+                    endVideoRecording (hout, herr, h)
+                    testFailed <- readMVar testFailedVar
+                    unless testFailed $ removePathForcibly path
+                )
+                (const $ do
+                    eitherResult :: Either SomeException () <- try $ action session
+                    case eitherResult of
+                      Left err -> do
+                        liftIO $ putStrLn [i|recordErrorVideos got error: #{err}|]
+                        throwIO err
+                      Right () -> modifyMVar_ testFailedVar $ const $ return True
+                )
 
 -- * Video util functions
 
@@ -86,52 +109,57 @@ withFullScreenVideoRecording path videoSettings action = do
   (width, height) <- liftIO getScreenResolution
   withVideoRecording' path videoSettings (fromIntegral width, fromIntegral height, 0, 0) action
 
-startWindowVideoRecording :: FilePath -> VideoSettings -> WD (Handle, Handle, ProcessHandle)
+startWindowVideoRecording :: FilePath -> VideoSettings -> WD (Handle, Handle, ProcessHandle, FilePath)
 startWindowVideoRecording path videoSettings = do
   (width, height) <- getWindowSize
   (x, y) <- getWindowPos
   liftIO $ startVideoRecording path (width, height, x, y) videoSettings
 
-startFullScreenVideoRecording :: (MonadIO m) => FilePath -> VideoSettings -> m (Handle, Handle, ProcessHandle)
+startFullScreenVideoRecording :: (MonadIO m) => FilePath -> VideoSettings -> m (Handle, Handle, ProcessHandle, FilePath)
 startFullScreenVideoRecording path videoSettings  = do
   (width, height) <- liftIO getScreenResolution
   liftIO $ startVideoRecording path (fromIntegral width, fromIntegral height, 0, 0) videoSettings
 
-startVideoRecording :: (MonadIO m) => FilePath -> (Word, Word, Int, Int) -> VideoSettings -> m (Handle, Handle, ProcessHandle)
+startVideoRecording :: (MonadIO m) => FilePath -> (Word, Word, Int, Int) -> VideoSettings -> m (Handle, Handle, ProcessHandle, FilePath)
 startVideoRecording path (width, height, x, y) (VideoSettings {..}) = liftIO $ do
 #ifdef linux_HOST_OS
   displayNum <- fromMaybe "" <$> (liftIO $ lookupEnv "DISPLAY")
 
   let executable = "ffmpeg"
+  let videoPath = [i|#{path}.avi|]
   let cmd = ["-draw_mouse", (if hideMouseWhenRecording then "0" else "1")
             , "-y"
+            , "-nostdin"
             , "-f", "x11grab"
-            , "-r", "30"
             , "-s", [i|#{width}x#{height}|]
             , "-i", [i|#{displayNum}.0+#{x},#{y}|]]
             ++ x11grabOptions
-            ++ [[i|#{path}.avi|]]
+            ++ [videoPath]
 #endif
 
 #ifdef darwin_HOST_OS
   maybeScreenNumber <- liftIO getMacScreenNumber
   let executable = "ffmpeg"
+  let videoPath = [i|#{path}.avi|]
   let cmd = case maybeScreenNumber of
     Just screenNumber -> ["-y"
+                         , "-nostdin"
                          , "-f", "avfoundation"
                          , "-i", [i|#{screenNumber}|]]
                          ++ avfoundationOptions
-                         ++ [[i|#{path}.avi|]]
+                         ++ [videoPath]
     Nothing -> error [i|Not launching ffmpeg since OS X screen number couldn't be determined.|]
 #endif
 
 #ifdef mingw32_HOST_OS
   let executable = "ffmpeg.exe"
+  let videoPath = [i|#{path}.mkv|]
   let cmd = ["-f", "gdigrab"
+            , "-nostdin"
             , "-draw_mouse", (if hideMouseWhenRecording then "0" else "1")
             , "-i", "desktop"]
             ++ gdigrabOptions
-            ++ [[i|#{path}.mkv|]]
+            ++ [videoPath]
 #endif
 
   liftIO $ removePathForcibly $ path <> "_" <> ffmpegErrfile
@@ -139,11 +167,12 @@ startVideoRecording path (width, height, x, y) (VideoSettings {..}) = liftIO $ d
   outfile <- openFile (path <> "_" <> ffmpegOutfile) AppendMode
   errfile <- openFile (path <> "_" <>  ffmpegErrfile) AppendMode
   (_, _, _, h) <- createProcess $ (proc executable cmd)
-                                  { std_in = Inherit
+                                  { create_group = True
+                                  , std_in = NoStream
                                   , std_out = UseHandle outfile
                                   , std_err = UseHandle errfile }
 
-  return (outfile, errfile, h)
+  return (outfile, errfile, h, videoPath)
 
 endVideoRecording :: (MonadIO m) => (Handle, Handle, ProcessHandle) -> m ()
 endVideoRecording (outfile, errfile, h) = liftIO $ do
@@ -161,37 +190,8 @@ endVideoRecording (outfile, errfile, h) = liftIO $ do
 withVideoRecording' :: (MonadIO m, MonadBaseControl IO m) => FilePath -> VideoSettings -> (Word, Word, Int, Int) -> m a -> m a
 withVideoRecording' path videoSettings dimensions action =
   E.bracket (startVideoRecording path dimensions videoSettings)
-            endVideoRecording
+            (\(hout, herr, h, _) -> endVideoRecording (hout, herr, h))
             (const action)
-
-hideMouse :: IO ()
-#ifdef linux_HOST_OS
--- | Some special code to hide the mouse cursor while recording videos
--- Taken from https://github.com/LeifW/xmonad-utils/blob/master/src/Utils.hs
--- Doesn't work without X11 so it's only enabled for Linux
-hideMouse = do
-  d <- openDisplay ""
-  w  <- rootWindow d (defaultScreen d)
-
-  let em = buttonPressMask .|. pointerMotionMask
-  cursor <- nullCursor d w
-  ps <- grabPointer d w False em grabModeAsync
-                    grabModeAsync w cursor currentTime
-  when (ps /= grabSuccess) $ do
-    threadDelay 1000000
-    hideMouse
-  where
-    nullCursor :: Display -> Window -> IO Cursor
-    nullCursor d w = do
-      let c = Color 0 0 0 0 0
-      p <- createPixmap d w 1 1 1
-      cursor <- createPixmapCursor d p p c c 0 0
-      freePixmap d p
-      return cursor
-
-#else
-hideMouse = return ()
-#endif
 
 -- * Screen resolution
 
