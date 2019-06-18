@@ -7,6 +7,7 @@ module Test.Hspec.WebDriver.Internal.Hooks.Timing (
 import Control.Concurrent
 import qualified Control.Exception.Lifted as EL
 import Control.Lens as L
+import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Data.Aeson as A
@@ -32,14 +33,14 @@ recordTestTiming = (H.aroundWith recordIndividualTestTiming) . (H.afterAll saveT
 
 recordIndividualTestTiming :: (HasCallStack) => (WdSession -> IO b) -> WdSession -> IO ()
 recordIndividualTestTiming action session@(WdSession {wdTimingInfo, wdLabels}) = do
-  timingInfo <- readMVar wdTimingInfo
-
   (eitherResult, timeDiff) <- liftIO $ timeItCatchingException (action session)
 
-  let atKey (convert -> k) = A._Object . at k . non (A.object [])
-  let traversal = foldl1 (.) $ atKey <$> reverse wdLabels
-  let updatedTimingInfo = set (traversal . atKey ("time" :: String)) (A.Number $ realToFrac timeDiff) timingInfo
-  modifyMVar_ wdTimingInfo $ const $ return updatedTimingInfo
+  unless (null wdLabels) $ do
+    let atKey (convert -> k) = A._Object . at k . non (A.object [])
+    let traversal = foldl1 (.) $ atKey <$> reverse wdLabels
+    timingInfo <- readMVar wdTimingInfo
+    let updatedTimingInfo = set (traversal . atKey ("time" :: String)) (A.Number $ realToFrac timeDiff) timingInfo
+    modifyMVar_ wdTimingInfo $ const $ return updatedTimingInfo
 
   whenLeft eitherResult EL.throw
 
