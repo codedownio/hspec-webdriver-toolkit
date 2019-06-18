@@ -1,7 +1,7 @@
 {-# LANGUAGE NamedFieldPuns, RecordWildCards, QuasiQuotes, ScopedTypeVariables, ViewPatterns #-}
 module Main where
 
-import Control.Monad.IO.Class
+import Data.Default
 import Data.String.Interpolate.IsString
 import System.Directory
 import System.FilePath
@@ -17,14 +17,14 @@ tests = describe "Basic widget tests" $ do
     it "does the first thing" $ runWithBrowser "browser1" $ do
       2 `shouldBe` 2
 
-    it "does the second thing" $ \_ -> do
-      putStrLn "Doing the first thing"
+    it "does the second thing" $ runWithBrowser "browser1" $ do
+      3 `shouldBe` 3
 
     it "starts a browser" $ runWithBrowser "browser1" $ do
       openPage "http://www.google.com"
 
       elem <- findElem (ByCSS "input[title=Search]")
-      liftIO $ putStrLn [i|Found elem: #{elem}|]
+      -- liftIO $ putStrLn [i|Found elem: #{elem}|]
       2 `shouldBe` 2
       -- click elem
       -- sendKeys "hello world" elem
@@ -45,7 +45,7 @@ main = do
 
   let wdOptions = (defaultWdOptions toolsRoot runRoot) {
         capabilities = chromeCapabilities
-        , runMode = RunHeadless
+        , runMode = Normal
         }
 
   -- hspec $ runWebDriver wdOptions (
@@ -55,4 +55,7 @@ main = do
   --   saveWebDriverLogs .
   --   saveBrowserLogs
   --   ) tests
-  hspec $ runWebDriver wdOptions (recordTestTiming . saveWebDriverLogs . recordEntireVideo) tests
+  hspec $ runWebDriver wdOptions (recordTestTiming
+                                  . saveWebDriverLogs
+                                  . recordEntireVideo (def {hideMouseWhenRecording = True})
+                                 ) tests

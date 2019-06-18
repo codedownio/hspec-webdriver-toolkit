@@ -7,6 +7,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , defaultWdOptions
   , RunMode(..)
   , XvfbConfig(..)
+  , VideoSettings(..)
   , WhenToSave(..)
 
   -- * Hooks
@@ -64,6 +65,7 @@ module Test.Hspec.WebDriver.Toolkit (
 
 import Control.Concurrent
 import Control.Exception
+import Data.Default
 import Data.Time.Clock
 import Data.Time.Format
 import System.Directory
@@ -88,7 +90,7 @@ import qualified Test.WebDriver.Session as W
 -- | A good default set of hooks: `screenshotBeforeAndAfterTest`, `recordErrorVideos`, and `saveBrowserLogs`.
 defaultHooks :: Hook
 defaultHooks = screenshotBeforeAndAfterTest
-  . recordErrorVideos
+  . recordErrorVideos def
   . saveBrowserLogs
 
 -- | All possible test instrumentation.

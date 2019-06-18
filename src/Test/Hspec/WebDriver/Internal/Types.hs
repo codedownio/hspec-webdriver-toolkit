@@ -79,3 +79,44 @@ data WdExample = WdExample { wdBrowser :: Browser
                            , wdAction :: W.WD () }
                | WdExampleEveryBrowser { wdAction :: W.WD () }
                | WdPending { wdPendingMsg :: Maybe String }
+
+
+-- * Video stuff
+
+fastX11VideoOptions = ["-an"
+                      --, "-r", "30"
+                      , "-vcodec"
+                      , "libxvid"
+                      , "-qscale:v", "1"
+                      , "-threads", "0"]
+
+qualityX11VideoOptions = ["-an"
+                         , "-r", "30"
+                         , "-vcodec", "libx264"
+                         , "-preset", "veryslow"
+                         , "-crf", "0"
+                         , "-threads", "0"]
+
+defaultAvfoundationOptions = ["-r", "30"
+                             , "-an"
+                             , "-vcodec", "libxvid"
+                             , "-qscale:v", "1"
+                             , "-threads", "0"]
+
+defaultGdigrabOptions = ["-framerate", "30"]
+
+data VideoSettings = VideoSettings { x11grabOptions :: [String]
+                                   -- ^ Arguments to x11grab, used with Linux.
+                                   , avfoundationOptions :: [String]
+                                   -- ^ Arguments to avfoundation, used with OS X.
+                                   , gdigrabOptions :: [String]
+                                   -- ^ Arguments to gdigrab, used with Windows.
+                                   , hideMouseWhenRecording :: Bool
+                                   -- ^ Hide the mouse while recording video. Linux and Windows only.
+                                   }
+
+instance Default VideoSettings where
+  def = VideoSettings { x11grabOptions = fastX11VideoOptions
+                      , avfoundationOptions = defaultAvfoundationOptions
+                      , gdigrabOptions = defaultGdigrabOptions
+                      , hideMouseWhenRecording = False }
