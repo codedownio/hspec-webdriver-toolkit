@@ -117,7 +117,7 @@ matrix:
 
   - env: BUILD=stack ARGS="--resolver lts-13.19"
     compiler: ": #stack 8.6.4"
-    addons: {apt: {packages: [libgmp-dev]}}
+    addons: {apt: {packages: [libgmp-dev, libx11-dev, libxinerama-dev, libxrandr-dev]}}
 
   # Nightly builds are allowed to fail
   - env: BUILD=stack ARGS="--resolver nightly"
