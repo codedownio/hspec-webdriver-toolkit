@@ -15,7 +15,6 @@ import Test.Hspec.WebDriver.Internal.Hooks.Screenshots
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
 import Test.WebDriver
-import Test.WebDriver.Session
 import Text.Printf
 
 #ifndef mingw32_HOST_OS

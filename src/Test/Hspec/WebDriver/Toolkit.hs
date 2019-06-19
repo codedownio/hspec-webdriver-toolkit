@@ -57,6 +57,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , WdSession
   , WdExample
   , getSessionMap
+  , getWdOptions
   , getResultsDir
 
   , module Test.Hspec.WebDriver.Toolkit.Capabilities
@@ -119,6 +120,9 @@ getTestFolder baseDir = do
 
 getSessionMap :: WdSession -> MVar (M.Map Browser W.WDSession)
 getSessionMap (WdSession {wdSessionMap}) = wdSessionMap
+
+getWdOptions :: WdSession -> WdOptions
+getWdOptions (WdSession {wdOptions}) = wdOptions
 
 -- | Change the log failing function for all functions in this test.
 withCustomLogFailing :: (W.LogEntry -> Bool) -> SpecType -> SpecType
