@@ -12,6 +12,7 @@ import Data.String.Interpolate.IsString
 import GHC.Stack
 import Test.Hspec.Core.Spec
 import Test.Hspec.WebDriver.Internal.Exceptions
+import Test.Hspec.WebDriver.Internal.Hooks.Logs
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
 import qualified Test.WebDriver as W
@@ -54,16 +55,27 @@ runActionWithBrowser browser action sessionWithLabels@(WdSession {..}) = do
       -- After the action, grab the updated session and save it before we return
       EL.finally action $ do
         sess' <- W.getSession
-        liftIO $ putStrLn [i|Storing updated session: '#{W.wdSessHist sess'}'|]
         liftIO $ modifyMVar_ wdSessionMap $ return . M.insert browser sess'
     ) >>= \case
     Left e -> liftIO $ do
       saveSessionHistoryIfConfigured sessionWithLabels
+
+      -- Ignore the fact that there were failing browser logs, since the test failed already for other reasons
+      _failingLogs <- saveBrowserLogsIfConfigured sessionWithLabels
+
       handleTestException sessionWithLabels e
       throw e -- Rethrow for the test framework to handle
     Right x -> do
       liftIO $ saveSessionHistoryIfConfigured sessionWithLabels
-      return x
+
+      failingLogs <- saveBrowserLogsIfConfigured sessionWithLabels
+      case failingLogs of
+        [] -> return x
+        xs -> do
+          -- Throw an exception because of the failing browser logs
+          let e = InvalidLogsException xs
+          handleTestException sessionWithLabels (SomeException e)
+          throw e
 
 runWithBrowser :: Browser -> W.WD () -> WdExample
 runWithBrowser = WdExample

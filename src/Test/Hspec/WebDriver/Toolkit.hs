@@ -120,7 +120,6 @@ getTestFolder baseDir = do
 getSessionMap :: WdSession -> MVar (M.Map Browser W.WDSession)
 getSessionMap (WdSession {wdSessionMap}) = wdSessionMap
 
-
 -- | Change the log failing function for all functions in this test.
 withCustomLogFailing :: (W.LogEntry -> Bool) -> SpecType -> SpecType
 withCustomLogFailing newFailureFn = aroundWith $ \action session@(WdSession {wdLogFailureFn}) -> do

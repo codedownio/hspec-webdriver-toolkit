@@ -15,8 +15,13 @@ sudo: false
 # Do not choose a language; we provide our own build tools.
 language: generic
 
+dist: xenial
+
 addons:
   chrome: stable
+  apt:
+    packages:
+      - libx11-dev
 
 # Caching so the next build will be fast too.
 cache:

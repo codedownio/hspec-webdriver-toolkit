@@ -3,6 +3,7 @@
 module Test.Hspec.WebDriver.Internal.Types where
 
 import Control.Concurrent.MVar
+import Control.Exception
 import qualified Data.Aeson as A
 import Data.Default
 import qualified Data.Map as M
@@ -74,6 +75,7 @@ data WdSession = WdSession { wdLabels :: [String]
                            , wdFailureCounter :: MVar Int
                            , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle, FilePath))
                            , wdTimingInfo :: MVar A.Value
+                           , wdSaveBrowserLogs :: MVar Bool
                            , wdLogFailureFn :: MVar (W.LogEntry -> Bool)
                            , wdConfig :: W.WDConfig }
 
@@ -82,6 +84,10 @@ data WdExample = WdExample { wdBrowser :: Browser
                | WdExampleEveryBrowser { wdAction :: W.WD () }
                | WdPending { wdPendingMsg :: Maybe String }
 
+data InvalidLogsException = InvalidLogsException [W.LogEntry]
+  deriving (Show)
+
+instance Exception InvalidLogsException
 
 data XvfbSession = XvfbSession { xvfbDisplayNum :: Int
                                , xvfbXauthority :: FilePath

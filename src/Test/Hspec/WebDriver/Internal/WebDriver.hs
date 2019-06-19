@@ -90,7 +90,7 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
       let retryPolicy = constantDelay 60000 <> limitRetries 1000
       recoverAll retryPolicy $ \_ ->
         readFile displayFilePath >>= \contents -> case readMay contents of
-          Nothing -> throwIO $ userError [i|Couldn't determine X11 screen to use. Got data: '#{contents}'|]
+          Nothing -> throwIO $ userError [i|Couldn't determine X11 screen to use. Got data: '#{contents}'. File was '#{displayFilePath}'|]
           Just x -> return $ Just $ XvfbSession { xvfbDisplayNum = x
                                                 , xvfbXauthority = runRoot </> ".Xauthority"
                                                 , xvfbDimensions = (w, h) }
@@ -103,6 +103,7 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
             <*> newMVar 0
             <*> newMVar Nothing
             <*> newMVar (A.object [])
+            <*> newMVar False
             <*> newMVar logFailureFn
             <*> pure wdConfig
 

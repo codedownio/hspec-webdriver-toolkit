@@ -57,11 +57,11 @@ x `shouldContain` y = liftIO $ x `H.shouldContain` y
 shouldNotContain :: (HasCallStack, Show a, Eq a) => [a] -> [a] -> WD ()
 x `shouldNotContain` y = liftIO $ x `H.shouldNotContain` y
 
--- | Asserts that the given text contains the given text.
+-- | Asserts that the given text contains a substring.
 textShouldContain :: (HasCallStack) => T.Text -> T.Text -> WD ()
 t `textShouldContain` txt = ((convert t) :: String) `shouldContain` (convert txt)
 
--- | Asserts that the given text contains the given text.
+-- | Asserts that the given text does not contain a substring.
 textShouldNotContain :: (HasCallStack) => T.Text -> T.Text -> WD ()
 t `textShouldNotContain` txt = ((convert t) :: String) `shouldNotContain` (convert txt)
 
