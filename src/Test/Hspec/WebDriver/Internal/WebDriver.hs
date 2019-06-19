@@ -104,7 +104,7 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
             <*> newMVar Nothing
             <*> newMVar (A.object [])
             <*> newMVar False
-            <*> newMVar logFailureFn
+            <*> newMVar (const False)
             <*> pure wdConfig
 
 

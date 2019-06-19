@@ -44,10 +44,11 @@ failOnSevereBrowserLogs = failOnCertainBrowserLogs predicate
 
 -- | Fail a test when logs matching a predicate are found. Implies 'saveBrowserLogs'.
 failOnCertainBrowserLogs :: (LogEntry -> Bool) -> Hook
-failOnCertainBrowserLogs predicate = beforeAllWith $ \(WdSession {wdLogFailureFn}) ->
+failOnCertainBrowserLogs predicate = beforeAllWith $ \(WdSession {wdLogFailureFn, wdSaveBrowserLogs}) -> do
+  modifyMVar_ wdSaveBrowserLogs $ const $ return True
   modifyMVar_ wdLogFailureFn $ const $ return predicate
 
--- | Save the webdriver logs for each test to the results directory. Implies 'saveBrowserLogs'.
+-- | Save the webdriver logs for each test to the results directory.
 saveWebDriverLogs :: Hook
 saveWebDriverLogs = after $ \sess@(WdSession {wdWebDriver=(_, _, _, stdoutPath, stderrPath, _)}) -> do
   let resultsDir = getResultsDir sess
@@ -77,15 +78,16 @@ flushLogsToFile sessionWithLabels@(WdSession {..}) =
     sessionMap <- readMVar wdSessionMap
     failingLogs <- forM (M.toList sessionMap) $ \(browser, sess) -> do
       logs <- runWD sess $ getLogs "browser"
-      unless (null logs) $ do
-        -- Write the normal logs
-        writeLogsToFile (resultsDir </> [i|#{browser}_browser_logs.log|]) logs
 
-        -- If any severe logs are present, write them to a separate file
-        let severeLogs = [x | x <- logs, logLevel x == LogSevere
-                            , not ("favicon.ico - Failed to load resource" `T.isInfixOf` logMsg x)]
-        unless (null severeLogs) $ writeLogsToFile (resultsDir </> [i|#{browser}_severe_browser_logs.log|]) severeLogs
+      -- Write the normal logs
+      writeLogsToFile (resultsDir </> [i|#{browser}_browser_logs.log|]) logs
 
+      -- If any severe logs are present, write them to a separate file
+      let severeLogs = [x | x <- logs, logLevel x == LogSevere
+                          , not ("favicon.ico - Failed to load resource" `T.isInfixOf` logMsg x)]
+      unless (null severeLogs) $ writeLogsToFile (resultsDir </> [i|#{browser}_severe_browser_logs.log|]) severeLogs
+
+      -- Return any failing logs
       return $ filter logFailureFn logs
 
     return $ mconcat failingLogs

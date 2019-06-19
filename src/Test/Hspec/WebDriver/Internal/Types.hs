@@ -44,9 +44,6 @@ data WdOptions = WdOptions {
   , runRoot :: RunRoot
   -- ^ Folder where information for a specific run should be kept. Required.
 
-  , logFailureFn :: W.LogEntry -> Bool
-  -- ^ A function to apply to browser logs at the end of every test. If it returns true, the test is failed. Can be used to fail tests if certain browser logs are found (for example, all 'LogSevere' logs). Defaults to @const False@.
-
   , capabilities :: W.Capabilities
   -- ^ The WebDriver capabilities to use
 
@@ -66,7 +63,7 @@ instance Default XvfbConfig where
   def = XvfbConfig Nothing
 
 defaultWdOptions :: FilePath -> FilePath -> WdOptions
-defaultWdOptions toolsRoot runRoot = WdOptions toolsRoot runRoot (const False) def OnException Normal
+defaultWdOptions toolsRoot runRoot = WdOptions toolsRoot runRoot def OnException Normal
 
 data WdSession = WdSession { wdLabels :: [String]
                            , wdWebDriver :: (Handle, Handle, ProcessHandle, FilePath, FilePath, Maybe XvfbSession)
@@ -77,6 +74,7 @@ data WdSession = WdSession { wdLabels :: [String]
                            , wdTimingInfo :: MVar A.Value
                            , wdSaveBrowserLogs :: MVar Bool
                            , wdLogFailureFn :: MVar (W.LogEntry -> Bool)
+                           -- ^ A function to apply to browser logs at the end of every test. If it returns true, the test is failed. Can be used to fail tests if certain browser logs are found (for example, all 'LogSevere' logs). Defaults to @const False@.
                            , wdConfig :: W.WDConfig }
 
 data WdExample = WdExample { wdBrowser :: Browser
