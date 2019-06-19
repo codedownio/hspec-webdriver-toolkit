@@ -66,6 +66,7 @@ module Test.Hspec.WebDriver.Toolkit (
 import Control.Concurrent
 import Control.Exception
 import Data.Default
+import qualified Data.Map as M
 import Data.Time.Clock
 import Data.Time.Format
 import System.Directory
@@ -116,7 +117,7 @@ getTestFolder baseDir = do
   createDirectoryIfMissing True testRoot
   return testRoot
 
-getSessionMap :: WdSession -> MVar [(String, W.WDSession)]
+getSessionMap :: WdSession -> MVar (M.Map Browser W.WDSession)
 getSessionMap (WdSession {wdSessionMap}) = wdSessionMap
 
 

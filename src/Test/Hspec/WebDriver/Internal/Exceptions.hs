@@ -5,6 +5,7 @@ module Test.Hspec.WebDriver.Internal.Exceptions where
 import Control.Concurrent
 import Control.Exception.Lifted as EL
 import Control.Monad
+import qualified Data.Map as M
 import Data.String.Interpolate.IsString
 import GHC.Stack
 import System.Directory
@@ -61,7 +62,7 @@ saveSessionHistoryIfConfigured session@(WdSession {wdOptions=(WdOptions {saveSel
 
   when (saveSeleniumMessageHistory `elem` [Always, OnException]) $ do
     sessionMap <- readMVar wdSessionMap
-    forM_ sessionMap $ \(browser, sess) -> do
-      hist <- wdSessHist <$> runWD sess getSession
+    forM_ (M.toList sessionMap) $ \(browser, sess) -> do
+      hist <- runWD sess getSessionHistory
       withFile (resultsDir </> [i|#{browser}_selenium_messages.txt|]) WriteMode $ \h ->
         forM_ hist $ hPrint h

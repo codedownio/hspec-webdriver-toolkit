@@ -4,9 +4,10 @@ module Test.Hspec.WebDriver.Internal.Lib where
 
 import Control.Concurrent.MVar
 import Control.Exception
+import qualified Control.Exception.Lifted as EL
 import Control.Monad
 import Control.Monad.IO.Class
-import qualified Data.List as L
+import qualified Data.Map as M
 import Data.String.Interpolate.IsString
 import GHC.Stack
 import Test.Hspec.Core.Spec
@@ -15,6 +16,7 @@ import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Config as W
+import qualified Test.WebDriver.Session as W
 
 instance Example WdExample where
   type Arg WdExample = WdSession
@@ -26,7 +28,7 @@ instance Example WdExample where
   evaluateExample (WdExampleEveryBrowser action) _ act _ = do
     act $ \session@(WdSession {wdSessionMap}) -> do
       sessionMap <- readMVar wdSessionMap
-      forM_ sessionMap $ \(browser, _) -> do
+      forM_ (M.toList sessionMap) $ \(browser, _) -> do
         runActionWithBrowser browser action session
 
     return $ Result "" Success
@@ -39,15 +41,22 @@ instance Example WdExample where
 runActionWithBrowser :: Browser -> W.WD a -> WdSession -> IO a
 runActionWithBrowser browser action sessionWithLabels@(WdSession {..}) = do
   -- Create new session if necessary (this can throw an exception)
-  sess <- modifyMVar wdSessionMap $ \sessionMap -> case L.lookup browser sessionMap of
+  sess <- modifyMVar wdSessionMap $ \sessionMap -> case M.lookup browser sessionMap of
     Just sess -> return (sessionMap, sess)
     Nothing -> do
-      sess' <- W.mkSession wdConfig
+      sess'' <- W.mkSession wdConfig
+      let sess' = sess'' { W.wdSessHistUpdate = W.unlimitedHistory }
       sess <- W.runWD sess' $ W.createSession $ W.wdCapabilities wdConfig
-      return ((browser, sess):sessionMap, sess)
+      return (M.insert browser sess sessionMap, sess)
 
   -- Run the test example, handling the exception specially
-  (liftIO $ try $ W.runWD sess action) >>= \case
+  (liftIO $ try $ W.runWD sess $ do
+      -- After the action, grab the updated session and save it before we return
+      EL.finally action $ do
+        sess' <- W.getSession
+        liftIO $ putStrLn [i|Storing updated session: '#{W.wdSessHist sess'}'|]
+        liftIO $ modifyMVar_ wdSessionMap $ return . M.insert browser sess'
+    ) >>= \case
     Left e -> liftIO $ do
       saveSessionHistoryIfConfigured sessionWithLabels
       handleTestException sessionWithLabels e
@@ -69,7 +78,7 @@ runEveryBrowser = WdExampleEveryBrowser
 runEveryBrowser' :: W.WD () -> WdSession -> IO ()
 runEveryBrowser' action session@(WdSession {wdSessionMap}) = do
   sessionMap <- readMVar wdSessionMap
-  forM_ sessionMap $ \(browser, _) -> do
+  forM_ (M.toList sessionMap) $ \(browser, _) -> do
     runActionWithBrowser browser action session
 
 executeWithBrowser :: Browser -> WdSession -> W.WD a -> W.WD a
@@ -79,17 +88,17 @@ executeWithBrowser browser session action = do
 closeSession :: Browser -> WdSession -> IO ()
 closeSession browser (WdSession {wdSessionMap}) = do
   modifyMVar_ wdSessionMap $ \sessionMap -> do
-    whenJust (L.lookup browser sessionMap) $ \sess ->
+    whenJust (M.lookup browser sessionMap) $ \sess ->
       W.runWD sess W.closeSession
-    return [(b, s) | (b, s) <- sessionMap, b /= browser]
+    return $ M.delete browser sessionMap
 
 closeAllSessionsExcept :: [Browser] -> WdSession -> IO ()
 closeAllSessionsExcept toKeep (WdSession {wdSessionMap}) = do
   modifyMVar_ wdSessionMap $ \sessionMap -> do
-    forM_ sessionMap $ \(name, sess) -> unless (name `elem` toKeep) $
+    forM_ (M.toList sessionMap) $ \(name, sess) -> unless (name `elem` toKeep) $
       catch (W.runWD sess W.closeSession)
             (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': '#{e}'|])
-    return [(b, s) | (b, s) <- sessionMap, b `elem` toKeep]
+    return $ M.fromList [(b, s) | (b, s) <- M.toList sessionMap, b `elem` toKeep]
 
 closeAllSessions :: WdSession -> IO ()
 closeAllSessions = closeAllSessionsExcept []

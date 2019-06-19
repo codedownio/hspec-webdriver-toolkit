@@ -14,6 +14,7 @@ module Test.Hspec.WebDriver.Internal.Hooks.Logs (
 import Control.Concurrent
 import Control.Exception.Lifted as EL
 import Control.Monad
+import qualified Data.Map as M
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -69,7 +70,7 @@ flushLogsToFile sessionWithLabels@(WdSession {..}) = handle (\(e :: EL.SomeExcep
   -- Remote logging is only supported on some browsers, Chrome and Firefox according to SO.
 
   sessionMap <- readMVar wdSessionMap
-  forM_ sessionMap $ \(browser, sess) -> do
+  forM_ (M.toList sessionMap) $ \(browser, sess) -> do
     logs <- runWD sess $ getLogs "browser"
     unless (null logs) $ do
       -- Write the normal logs

@@ -10,6 +10,7 @@ module Test.Hspec.WebDriver.Internal.Hooks.Screenshots (
 
 import Control.Concurrent
 import Control.Monad
+import qualified Data.Map as M
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
 import GHC.Stack
@@ -43,5 +44,5 @@ saveScreenshots screenshotName sessionWithLabels@(WdSession {..}) = do
 
   -- For every session, and for every window, try to get a screenshot for the results dir
   sessionMap <- readMVar wdSessionMap
-  forM_ sessionMap $ \(browser, sess) -> runWD sess $
+  forM_ (M.toList sessionMap) $ \(browser, sess) -> runWD sess $
     saveScreenshot $ resultsDir </> [i|#{browser}_#{screenshotName}.png|]

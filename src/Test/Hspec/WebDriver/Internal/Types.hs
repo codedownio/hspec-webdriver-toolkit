@@ -5,6 +5,7 @@ module Test.Hspec.WebDriver.Internal.Types where
 import Control.Concurrent.MVar
 import qualified Data.Aeson as A
 import Data.Default
+import qualified Data.Map as M
 import Data.String.Interpolate.IsString
 import GHC.Stack
 import System.IO
@@ -69,7 +70,7 @@ defaultWdOptions toolsRoot runRoot = WdOptions toolsRoot runRoot (const False) d
 data WdSession = WdSession { wdLabels :: [String]
                            , wdWebDriver :: (Handle, Handle, ProcessHandle, FilePath, FilePath, Maybe XvfbSession)
                            , wdOptions :: WdOptions
-                           , wdSessionMap :: MVar [(Browser, W.WDSession)]
+                           , wdSessionMap :: MVar (M.Map Browser W.WDSession)
                            , wdFailureCounter :: MVar Int
                            , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle, FilePath))
                            , wdTimingInfo :: MVar A.Value

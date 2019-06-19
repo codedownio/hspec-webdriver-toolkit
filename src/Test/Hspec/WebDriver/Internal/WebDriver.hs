@@ -13,7 +13,6 @@ import Control.Monad.Trans.Except
 import Control.Retry
 import qualified Data.Aeson as A
 import Data.Default
-import Data.Either
 import Data.Maybe
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
@@ -100,7 +99,7 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
   WdSession <$> pure []
             <*> pure (hout, herr, p, logsDir </> seleniumOutFileName, logsDir </> seleniumErrFileName, maybeXvfbSession)
             <*> pure wdOptions
-            <*> newMVar []
+            <*> newMVar mempty
             <*> newMVar 0
             <*> newMVar Nothing
             <*> newMVar (A.object [])
