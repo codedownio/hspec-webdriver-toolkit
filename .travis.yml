@@ -22,6 +22,8 @@ addons:
   apt:
     packages:
       - libx11-dev
+      - libxinerama-dev
+      - libxrandr-dev
 
 # Caching so the next build will be fast too.
 cache:
