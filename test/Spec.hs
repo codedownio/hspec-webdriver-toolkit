@@ -13,7 +13,7 @@ tests :: Spec
 tests = describe "Tookit tests" $ do
   describe "Individual hook tests" $ do
     it "can fail the tests on severe browser logs" $ do
-      wdOptions <- getWdOptions
+      wdOptions <- getTestWdOptions
       let hspecOutputFile = (runRoot wdOptions) </> "hspec_output.txt"
       let config = hspecConfigFileOutput hspecOutputFile
 
@@ -31,7 +31,7 @@ tests = describe "Tookit tests" $ do
       readFile hspecOutputFile >>= (`H.shouldContain` "uncaught exception: InvalidLogsException")
 
     it "can take screenshots before and after tests" $ do
-      wdOptions <- getWdOptions
+      wdOptions <- getTestWdOptions
       let config = hspecConfigFileOutput $ (runRoot wdOptions) </> "hspec_output.txt"
 
       (Summary {..}) <- hspecWithResult config $ runWebDriver wdOptions screenshotBeforeAndAfterTest $ do
@@ -50,8 +50,8 @@ tests = describe "Tookit tests" $ do
 
 -- TODO: add a test for the fact that forward slashes in test labels result in extra directories
 
-getWdOptions :: IO WdOptions
-getWdOptions = do
+getTestWdOptions :: IO WdOptions
+getTestWdOptions = do
   cwd <- getCurrentDirectory
   let toolsRoot = cwd </> "test_tools"
   let runsRoot = cwd </> "test_runs"
