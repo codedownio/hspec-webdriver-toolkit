@@ -19,11 +19,6 @@ dist: xenial
 
 addons:
   chrome: stable
-  apt:
-    packages:
-      - libx11-dev
-      - libxinerama-dev
-      - libxrandr-dev
 
 # Caching so the next build will be fast too.
 cache:
@@ -75,13 +70,14 @@ matrix:
   # see below.
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7
     compiler: ": #GHC HEAD"
-    addons: {apt: {packages: [cabal-install-head,ghc-head,happy-1.19.5,alex-3.1.7], sources: [hvr-ghc]}}
+    addons: {apt: {packages: [cabal-install-head, ghc-head, happy-1.19.5, alex-3.1.7, libx11-dev, libxinerama-dev, libxrandr-dev],
+                   sources: [hvr-ghc]}}
 
   # The Stack builds. We can pass in arbitrary Stack arguments via the ARGS
   # variable, such as using --stack-yaml to point to a different file.
   - env: BUILD=stack ARGS=""
     compiler: ": #stack default"
-    addons: {apt: {packages: [libgmp-dev]}}
+    addons: {apt: {packages: [libgmp-dev, libx11-dev, libxinerama-dev, libxrandr-dev]}}
 
   # - env: BUILD=stack ARGS="--resolver lts-2"
   #   compiler: ": #stack 7.8.4"
@@ -122,7 +118,7 @@ matrix:
   # Nightly builds are allowed to fail
   - env: BUILD=stack ARGS="--resolver nightly"
     compiler: ": #stack nightly"
-    addons: {apt: {packages: [libgmp-dev]}}
+    addons: {apt: {packages: [libgmp-dev, libx11-dev, libxinerama-dev, libxrandr-dev]}}
 
   # Build on macOS in addition to Linux
   - env: BUILD=stack ARGS=""
