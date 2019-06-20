@@ -47,6 +47,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , beforeAllWith
   , beforeWith'
   , withCustomLogFailing
+  , flushLogsToFile
 
   -- * Types
   , Hook

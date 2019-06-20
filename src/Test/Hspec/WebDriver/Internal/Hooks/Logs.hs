@@ -10,6 +10,8 @@ module Test.Hspec.WebDriver.Internal.Hooks.Logs (
   , seleniumOutFileName
   , seleniumErrFileName
   , saveBrowserLogsIfConfigured
+
+  , flushLogsToFile
   ) where
 
 import Control.Concurrent
@@ -65,8 +67,18 @@ seleniumOutFileName = "selenium_stdout.log"
 -- * Implementation
 
 -- | The return value contains any log entries which failed the wdLogFailureFn.
-flushLogsToFile :: (HasCallStack) => WdSession -> IO [LogEntry]
-flushLogsToFile sessionWithLabels@(WdSession {..}) =
+flushLogsToFile :: (HasCallStack) =>
+  String
+  -- ^ The log type to retrieve. For example, "browser" or "performance".
+  -> (LogEntry -> Bool)
+  -- ^ Filter which log entries to include.
+  -> (LogEntry -> T.Text)
+  -- ^ Format a log entry into a line in the file.
+  -> WdSession
+  -- ^ The sesion
+  -> IO [LogEntry]
+  -- ^ Returns the list of severe log entries, as determine by the log failure function.
+flushLogsToFile logType filterLogs logEntryFormatter sessionWithLabels@(WdSession {..}) =
   handle (\(e :: EL.SomeException) -> putStrLn [i|Failed to get logs: #{e}|] >> return []) $ do
     let resultsDir = getResultsDir sessionWithLabels
     createDirectoryIfMissing True resultsDir
@@ -77,15 +89,14 @@ flushLogsToFile sessionWithLabels@(WdSession {..}) =
     logFailureFn <- readMVar wdLogFailureFn
     sessionMap <- readMVar wdSessionMap
     failingLogs <- forM (M.toList sessionMap) $ \(browser, sess) -> do
-      logs <- runWD sess $ getLogs "browser"
+      logs <- (filter filterLogs) <$> (runWD sess $ getLogs logType)
 
       -- Write the normal logs
-      writeLogsToFile (resultsDir </> [i|#{browser}_browser_logs.log|]) logs
+      writeLogsToFile (resultsDir </> [i|#{browser}_#{logType}_logs.log|]) logs
 
       -- If any severe logs are present, write them to a separate file
-      let severeLogs = [x | x <- logs, logLevel x == LogSevere
-                          , not ("favicon.ico - Failed to load resource" `T.isInfixOf` logMsg x)]
-      unless (null severeLogs) $ writeLogsToFile (resultsDir </> [i|#{browser}_severe_browser_logs.log|]) severeLogs
+      let severeLogs = [x | x <- logs, logLevel x == LogSevere]
+      unless (null severeLogs) $ writeLogsToFile (resultsDir </> [i|#{browser}_severe_#{logType}_logs.log|]) severeLogs
 
       -- Return any failing logs
       return $ filter logFailureFn logs
@@ -96,11 +107,13 @@ flushLogsToFile sessionWithLabels@(WdSession {..}) =
     writeLogsToFile :: (HasCallStack) => (HasCallStack) => FilePath -> [LogEntry] -> IO ()
     writeLogsToFile filename logs =
       withFile filename AppendMode $ \h ->
-        forM_ logs $ \(LogEntry time level msg) ->
-          T.hPutStrLn h [i|#{time}\t#{level}\t#{msg}|]
+        forM_ logs $ T.hPutStrLn h . logEntryFormatter
 
 -- | The return value contains any log entries which failed the wdLogFailureFn.
 saveBrowserLogsIfConfigured :: WdSession -> IO [LogEntry]
 saveBrowserLogsIfConfigured sess =
   handle (\(e :: SomeException) -> putStrLn [i|Error saving browser logs: '#{e}'|] >> return [])
-         (flushLogsToFile sess)
+         (flushLogsToFile "browser" (const True) defaultLogEntryFormatter sess)
+
+defaultLogEntryFormatter :: LogEntry -> T.Text
+defaultLogEntryFormatter (LogEntry time level msg) = [i|#{time}\t#{level}\t#{msg}|]
