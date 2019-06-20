@@ -8,7 +8,6 @@ module Test.Hspec.WebDriver.Internal.Misc (
 
 import Control.Concurrent
 import qualified Control.Exception as E
-import Data.String.Interpolate.IsString
 import qualified Test.Hspec as H
 import Test.Hspec.Core.Spec
 
@@ -42,9 +41,7 @@ memoize' mvar action x = do
     Empty -> do
       result <- E.try $ action x
       case result of
-        Left err -> do
-          putStrLn [i|Exception in hook! It was '#{err}'|]
-          return (Failed err, Left err)
+        Left err -> return (Failed err, Left err)
         Right () -> return (Memoized, Right ())
     Memoized -> return (ma, Right ())
     Failed _ -> return (ma, Right ())
