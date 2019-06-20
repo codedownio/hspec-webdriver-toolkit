@@ -32,6 +32,7 @@ dependencies:
 - hostname
 - hspec
 - hspec-core
+- http-client
 - interpolate
 - lens-aeson
 - lens

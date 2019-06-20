@@ -9,11 +9,14 @@ module Test.Hspec.WebDriver.Internal.Hooks.Screenshots (
   ) where
 
 import Control.Concurrent
+import Control.Exception.Lifted
 import Control.Monad
+import Control.Monad.IO.Class
 import qualified Data.Map as M
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
 import GHC.Stack
+import Network.HTTP.Client
 import System.Directory
 import System.FilePath
 import Test.Hspec
@@ -45,4 +48,5 @@ saveScreenshots screenshotName sessionWithLabels@(WdSession {..}) = do
   -- For every session, and for every window, try to get a screenshot for the results dir
   sessionMap <- readMVar wdSessionMap
   forM_ (M.toList sessionMap) $ \(browser, sess) -> runWD sess $
-    saveScreenshot $ resultsDir </> [i|#{browser}_#{screenshotName}.png|]
+    handle (\(e :: HttpException) -> liftIO $ putStrLn [i|HttpException when trying to take a screenshot: '#{e}'|])
+           (saveScreenshot $ resultsDir </> [i|#{browser}_#{screenshotName}.png|])
