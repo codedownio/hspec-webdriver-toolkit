@@ -16,11 +16,9 @@ import System.FilePath
 import System.Process
 import Test.Hspec.WebDriver.Internal.Types
 
-getResultsDir' :: FilePath -> [String] -> FilePath
-getResultsDir' runRoot labels = runRoot </> "results" </> (L.intercalate "/" (reverse labels))
-
 getResultsDir :: WdSession -> FilePath
-getResultsDir (WdSession {wdOptions=(WdOptions {runRoot}), wdLabels}) = getResultsDir' runRoot wdLabels
+getResultsDir (WdSession {wdOptions=(WdOptions {runRoot}), wdLabels}) =
+  runRoot </> "results" </> (L.intercalate "/" (reverse wdLabels))
 
 -- * Truncating log files
 
@@ -31,15 +29,16 @@ moveAndTruncate from to = do
     copyFile from to
     tryTruncateFile from
 
-tryTruncateFile :: FilePath -> IO ()
-tryTruncateFile path = E.catch (truncateFile path)
-                               (\(e :: E.SomeException) -> putStrLn [i|Failed to truncate file #{path}: #{e}|])
+  where
+    tryTruncateFile :: FilePath -> IO ()
+    tryTruncateFile path = E.catch (truncateFile path)
+                                   (\(e :: E.SomeException) -> putStrLn [i|Failed to truncate file #{path}: #{e}|])
 
-truncateFile :: FilePath -> IO ()
+    truncateFile :: FilePath -> IO ()
 #ifdef mingw32_HOST_OS
-truncateFile path = withFile path WriteMode $ flip hPutStr "\n" -- Not exactly truncation, but close enough?
+    truncateFile path = withFile path WriteMode $ flip hPutStr "\n" -- Not exactly truncation, but close enough?
 #else
-truncateFile path = void $ readCreateProcess (shell [i|> #{path}|]) ""
+    truncateFile path = void $ readCreateProcess (shell [i|> #{path}|]) ""
 #endif
 
 -- * Exceptions

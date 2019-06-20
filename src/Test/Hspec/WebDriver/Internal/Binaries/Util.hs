@@ -1,6 +1,11 @@
 {-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, MultiWayIf, ViewPatterns #-}
 
-module Test.Hspec.WebDriver.Internal.Binaries.Util where
+module Test.Hspec.WebDriver.Internal.Binaries.Util (
+  detectPlatform
+  , detectChromeMajorVersion
+  , Platform(..)
+  , chromeDriverPaths
+  ) where
 
 import Data.Convertible
 import Data.String.Interpolate.IsString

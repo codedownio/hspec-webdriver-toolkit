@@ -29,7 +29,6 @@ dependencies:
 - directory
 - exceptions
 - filepath
-- hostname
 - hspec
 - hspec-core
 - http-client
@@ -53,7 +52,6 @@ dependencies:
 - webdriver
 - HTTP
 - HUnit
-- X11
 
 default-extensions:
 - OverloadedStrings

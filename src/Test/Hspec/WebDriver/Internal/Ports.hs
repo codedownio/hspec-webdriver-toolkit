@@ -1,6 +1,8 @@
-{-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, LambdaCase #-}
 
-module Test.Hspec.WebDriver.Internal.Ports where
+module Test.Hspec.WebDriver.Internal.Ports (
+  findFreePortOrException
+  ) where
 
 import Control.Exception
 import Control.Retry
@@ -43,11 +45,9 @@ findFreePort :: IO (Maybe N.PortNumber)
 findFreePort = findFreePortInRange (49152, 65535) []
 
 findFreePortOrException :: IO N.PortNumber
-findFreePortOrException = do
-  maybePort <- findFreePort
-  case maybePort of
-    Just port -> return port
-    Nothing -> error "Couldn't find free port"
+findFreePortOrException = findFreePort >>= \case
+  Just port -> return port
+  Nothing -> error "Couldn't find free port"
 
 findFreePortNotIn :: [N.PortNumber] -> IO (Maybe N.PortNumber)
 findFreePortNotIn = findFreePortInRange (49152, 65535)

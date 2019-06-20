@@ -1,6 +1,9 @@
-{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, LambdaCase, Rank2Types #-}
+{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, Rank2Types #-}
 
-module Test.Hspec.WebDriver.Internal.Binaries where
+module Test.Hspec.WebDriver.Internal.Binaries (
+  downloadSeleniumIfNecessary
+  , downloadChromeDriverIfNecessary
+  ) where
 
 import Control.Monad
 import Control.Monad.IO.Class
