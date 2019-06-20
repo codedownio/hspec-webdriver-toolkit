@@ -27,7 +27,10 @@ beforeWith' action = H.aroundWith $ \actionExpectingA aValue -> do
 beforeAllWith :: (a -> IO ()) -> SpecWith a -> SpecWith a
 beforeAllWith action spec = do
   mvar <- runIO (newMVar Empty)
-  beforeWith' (memoize' mvar action) spec
+
+  flip H.aroundWith spec $ \actionExpectingA aValue -> do
+    memoize' mvar action aValue
+    actionExpectingA aValue
 
 data Memoized = Empty
               | Memoized
@@ -39,10 +42,12 @@ memoize' mvar action x = do
     Empty -> do
       result <- E.try $ action x
       case result of
-        Left err -> return (Failed err, Left err)
+        Left err -> do
+          putStrLn [i|Exception in hook! It was '#{err}'|]
+          return (Failed err, Left err)
         Right () -> return (Memoized, Right ())
     Memoized -> return (ma, Right ())
-    Failed e -> E.throwIO (Pending Nothing (Just [i|exception in hook (it was #{e})|]))
+    Failed _ -> return (ma, Right ())
 
   case result of
     Left err -> E.throwIO err
