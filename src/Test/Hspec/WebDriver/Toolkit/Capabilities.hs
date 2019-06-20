@@ -19,7 +19,7 @@ chromeCapabilities =
       , additionalCaps=[("loggingPrefs", A.object [("browser", "ALL")
                                                   , ("client", "WARNING")
                                                   , ("driver", "WARNING")
-                                                  , ("performance", "WARNING")
+                                                  , ("performance", "ALL")
                                                   , ("server", "WARNING")
                                                   ])]
       }
