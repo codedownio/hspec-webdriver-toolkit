@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, LambdaCase, Rank2Types #-}
+{-# LANGUAGE QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, Rank2Types #-}
 
 module Test.Hspec.WebDriver.Internal.Misc (
   beforeWith'
@@ -8,6 +8,7 @@ module Test.Hspec.WebDriver.Internal.Misc (
 
 import Control.Concurrent
 import qualified Control.Exception as E
+import Data.String.Interpolate.IsString
 import qualified Test.Hspec as H
 import Test.Hspec.Core.Spec
 
@@ -41,7 +42,7 @@ memoize' mvar action x = do
         Left err -> return (Failed err, Left err)
         Right () -> return (Memoized, Right ())
     Memoized -> return (ma, Right ())
-    Failed _ -> E.throwIO (Pending Nothing (Just "exception in beforeAll-hook (see previous failure)"))
+    Failed e -> E.throwIO (Pending Nothing (Just [i|exception in hook (it was #{e})|]))
 
   case result of
     Left err -> E.throwIO err

@@ -48,5 +48,7 @@ saveScreenshots screenshotName sessionWithLabels@(WdSession {..}) = do
   -- For every session, and for every window, try to get a screenshot for the results dir
   sessionMap <- readMVar wdSessionMap
   forM_ (M.toList sessionMap) $ \(browser, sess) -> runWD sess $
-    handle (\(e :: HttpException) -> liftIO $ putStrLn [i|HttpException when trying to take a screenshot: '#{e}'|])
+    handle (\(e :: HttpException) -> case e of
+               (HttpExceptionRequest _ content) -> liftIO $ putStrLn [i|HttpException when trying to take a screenshot: '#{content}'|]
+               e -> liftIO $ putStrLn [i|HttpException when trying to take a screenshot: '#{e}'|])
            (saveScreenshot $ resultsDir </> [i|#{browser}_#{screenshotName}.png|])
