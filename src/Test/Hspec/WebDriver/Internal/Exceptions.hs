@@ -50,7 +50,7 @@ handleTestException session@(WdSession {wdOptions=(WdOptions {runRoot, saveSelen
   shelly $ silently $ cp_r (fromString resultsDir) (fromString (dir </> errorFolderName))
 #else
   -- Make the symlink relative so that it still works when test results are tarballed
-  catch (createSymbolicLink (".." </> makeRelative errorsDir resultsDir) (errorsDir </> errorFolderName))
+  catch (createSymbolicLink (".." </> makeRelative runRoot resultsDir) (errorsDir </> errorFolderName))
         (\(e :: SomeException) -> putStrLn [i|Error: failed to create symlink on test exception: #{e}|])
 #endif
 
