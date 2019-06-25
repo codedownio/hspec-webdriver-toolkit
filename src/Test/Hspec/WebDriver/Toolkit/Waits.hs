@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, ConstraintKinds, QuasiQuotes, TemplateHaskell #-}
+{-# LANGUAGE CPP, ConstraintKinds, QuasiQuotes, TemplateHaskell, LambdaCase #-}
 
 module Test.Hspec.WebDriver.Toolkit.Waits where
 
@@ -37,8 +37,15 @@ waitUntilURLContains desired = waitUntil 10 $ getCurrentURL >>= ((`textShouldCon
 waitForElementToDisappear :: (HasCallStack) => T.Text -> WD ()
 waitForElementToDisappear modalSelector = waitUntil 10 $ elementShouldNotExist modalSelector
 
+elementShouldExist :: (HasCallStack) => T.Text -> WD ()
+elementShouldExist css = numElements css >>= \case
+  0 -> expectationFailure [i|Element '#{css}' didn't exist|]
+  _ -> return ()
+
 elementShouldNotExist :: (HasCallStack) => T.Text -> WD ()
-elementShouldNotExist css = numberElementsShouldBe css 0
+elementShouldNotExist css = numElements css >>= \case
+  0 -> return ()
+  n -> expectationFailure [i|Element '#{css}' still existed (#{n})|]
 
 numElements :: (HasCallStack) => T.Text -> WD Int
 numElements css = withImplicitWaitMs 100 $ length <$> findElems (ByCSS css)
