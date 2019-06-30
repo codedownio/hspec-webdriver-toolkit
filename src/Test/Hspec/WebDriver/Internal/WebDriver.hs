@@ -87,7 +87,7 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
   maybeXvfbSession <- case maybeDisplayFile of
     Nothing -> return Nothing
     Just (displayFilePath, (w, h)) -> do
-      let retryPolicy = constantDelay 60000 <> limitRetries 1000
+      let retryPolicy = constantDelay 10000 <> limitRetries 1000
       recoverAll retryPolicy $ \_ ->
         readFile displayFilePath >>= \contents -> case readMay contents of
           Nothing -> throwIO $ userError [i|Couldn't determine X11 screen to use. Got data: '#{contents}'. File was '#{displayFilePath}'|]
