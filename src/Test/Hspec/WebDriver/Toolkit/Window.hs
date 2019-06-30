@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, QuasiQuotes, LambdaCase #-}
+{-# LANGUAGE CPP, QuasiQuotes #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 module Test.Hspec.WebDriver.Toolkit.Window where

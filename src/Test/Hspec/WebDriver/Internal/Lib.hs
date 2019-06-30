@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes, LambdaCase #-}
+{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes #-}
 
 module Test.Hspec.WebDriver.Internal.Lib where
 

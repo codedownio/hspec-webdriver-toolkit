@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, ConstraintKinds, QuasiQuotes, TemplateHaskell, LambdaCase #-}
+{-# LANGUAGE CPP, ConstraintKinds, QuasiQuotes, TemplateHaskell #-}
 
 module Test.Hspec.WebDriver.Toolkit.Waits where
 

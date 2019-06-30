@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, LambdaCase #-}
+{-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables #-}
 
 module Test.Hspec.WebDriver.Internal.Ports (
   findFreePortOrException

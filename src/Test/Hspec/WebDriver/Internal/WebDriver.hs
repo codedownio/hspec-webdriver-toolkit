@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, LambdaCase, Rank2Types #-}
+{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, NamedFieldPuns, Rank2Types #-}
 
 module Test.Hspec.WebDriver.Internal.WebDriver (
   startWebDriver

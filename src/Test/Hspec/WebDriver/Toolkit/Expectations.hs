@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes, LambdaCase, Rank2Types #-}
+{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes, Rank2Types #-}
 
 module Test.Hspec.WebDriver.Toolkit.Expectations where
 

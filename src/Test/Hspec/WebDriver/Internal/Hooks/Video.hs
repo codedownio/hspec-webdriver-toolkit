@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, FlexibleContexts, OverloadedStrings, NamedFieldPuns, LambdaCase #-}
+{-# LANGUAGE CPP, QuasiQuotes, ScopedTypeVariables, FlexibleContexts, OverloadedStrings, NamedFieldPuns #-}
 
 module Test.Hspec.WebDriver.Internal.Hooks.Video (
   recordEntireVideo
