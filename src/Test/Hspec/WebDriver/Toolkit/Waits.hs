@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, ConstraintKinds, QuasiQuotes, TemplateHaskell #-}
+{-# LANGUAGE CPP, ConstraintKinds, QuasiQuotes, TemplateHaskell, LambdaCase #-}
 
 module Test.Hspec.WebDriver.Toolkit.Waits where
 
@@ -61,11 +61,11 @@ withImplicitWaitMs wait action = EL.bracket (setImplicitWait wait)
 -- | Send HTTP requests to url until we get a 200 response
 waitUntil200 :: (HasCallStack) => String -> IO ()
 waitUntil200 url = do
-  response <- E.handle (\(_ :: E.SomeException) -> return $ Left $ ErrorMisc "No good") $ simpleHTTP (getRequest url)
-  case response of
+  (handleException $ simpleHTTP (getRequest url)) >>= \case
     Right (Response {rspCode}) | rspCode == (2, 0, 0) -> return ()
     _ -> retry
   where retry = threadDelay 1000000 >> waitUntil200 url
+        handleException = E.handle (\(_ :: E.SomeException) -> return $ Left $ ErrorMisc "No good")
 
 -- | Same as waitUntil200, but with a fixed timeout
 waitUntil200WithTimeout :: (HasCallStack) => String -> IO ()
