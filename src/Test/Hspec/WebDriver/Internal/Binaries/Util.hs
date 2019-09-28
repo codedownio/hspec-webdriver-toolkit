@@ -26,7 +26,11 @@ detectPlatform =  case SI.os of
 
 chromeDriverPaths :: [(Int, [(Platform, T.Text)])]
 chromeDriverPaths = [
-  (76, [(Linux, "https://chromedriver.storage.googleapis.com/76.0.3809.12/chromedriver_linux64.zip")
+  (77, [(Linux, "https://chromedriver.storage.googleapis.com/77.0.3865.10/chromedriver_linux64.zip")
+       , (OSX, "https://chromedriver.storage.googleapis.com/77.0.3865.10/chromedriver_mac64.zip")
+       , (Windows, "https://chromedriver.storage.googleapis.com/77.0.3865.10/chromedriver_win32.zip")])
+
+  , (76, [(Linux, "https://chromedriver.storage.googleapis.com/76.0.3809.12/chromedriver_linux64.zip")
        , (OSX, "https://chromedriver.storage.googleapis.com/76.0.3809.12/chromedriver_mac64.zip")
        , (Windows, "https://chromedriver.storage.googleapis.com/76.0.3809.12/chromedriver_win32.zip")])
 
