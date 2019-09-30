@@ -10,6 +10,10 @@ module Test.Hspec.WebDriver.Toolkit (
   , VideoSettings(..)
   , WhenToSave(..)
 
+  -- * Lower level helpers
+  , startWebDriver
+  , stopWebDriver
+
   -- * Hooks
 
   -- ** Default hook sets
@@ -55,11 +59,12 @@ module Test.Hspec.WebDriver.Toolkit (
   , Browser
   , ToolsRoot
   , RunRoot
-  , WdSession
+  , WdSession(..)
   , WdExample
   , getSessionMap
   , getWdOptions
   , getResultsDir
+  , XvfbSession(..)
 
   , module Test.Hspec.WebDriver.Toolkit.Capabilities
   , module Test.Hspec.WebDriver.Toolkit.Expectations
