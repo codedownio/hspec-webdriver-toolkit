@@ -8,7 +8,6 @@ module Test.Hspec.WebDriver.Internal.Binaries (
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Except
-import qualified Data.List as L
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
 import System.Directory
@@ -31,16 +30,14 @@ downloadSelenium seleniumPath = void $ do
 
 downloadChromeDriverIfNecessary :: FilePath -> IO (Either T.Text FilePath)
 downloadChromeDriverIfNecessary toolsDir = runExceptT $ do
-  chromeMajorVersion <- ExceptT detectChromeMajorVersion
-  downloadPath <- case L.lookup chromeMajorVersion chromeDriverPaths of
-    Nothing -> throwE [i|Couldn't figure out which chromedriver to download for Chrome '#{chromeMajorVersion}'|]
-    Just platformToPath -> case L.lookup detectPlatform platformToPath of
-      Nothing -> throwE [i|Couldn't find chrome driver for platform '#{detectPlatform}'|]
-      Just path -> return path
+  chromeVersion <- ExceptT detectChromeVersion
+  chromeDriverVersion@(w, x, y, z) <- ExceptT $ getChromeDriverVersion chromeVersion
+  let downloadPath = getChromeDriverDownloadPath chromeDriverVersion detectPlatform
+
   let executableName = case detectPlatform of
         Windows -> "chromedriver.exe"
         _ -> "chromedriver"
-  let chromeDriverPath = [i|#{toolsDir}/chromedrivers/#{chromeMajorVersion}/#{executableName}|]
+  let chromeDriverPath = [i|#{toolsDir}/chromedrivers/#{w}.#{x}.#{y}.#{z}/#{executableName}|]
   (liftIO $ doesFileExist chromeDriverPath) >>= flip unless (ExceptT $ downloadAndUnzipToPath downloadPath chromeDriverPath)
 
   return chromeDriverPath
