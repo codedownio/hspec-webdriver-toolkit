@@ -3,6 +3,7 @@
 
 module Test.Hspec.WebDriver.Toolkit.Window where
 
+import Control.Concurrent
 import Control.Exception.Lifted as EL
 import Control.Monad
 import Control.Monad.IO.Class
@@ -10,14 +11,17 @@ import Data.Bits as B
 import qualified Data.ByteString as B
 import Data.Convertible
 import Data.List
+import qualified Data.Map as M
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
 import GHC.Stack
 import System.Environment
 import System.Process
+import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Toolkit.Expectations
 import Test.Hspec.WebDriver.Toolkit.Waits
 import Test.WebDriver
+import qualified Test.WebDriver as W
 import Test.WebDriver.Exceptions
 
 setWindowLeftSide :: (HasCallStack) => WD ()
@@ -93,9 +97,9 @@ closingExtraWindows action =
           (\(originalFocusedWindow, originalWindows) -> do
               curWindows <- windows
               forM_ (curWindows \\ originalWindows) $ \toClose ->
-                handle swallowNoSuchWindowException $ focusWindow toClose >> closeWindow toClose
+                handle swallowNoSuchWindowException (focusWindow toClose >> closeWindow toClose)
 
-              handle swallowNoSuchWindowException $ focusWindow originalFocusedWindow
+              handle swallowNoSuchWindowException (focusWindow originalFocusedWindow)
               )
           (const action)
 
@@ -124,3 +128,13 @@ windowShouldOpen action = do
 
 swallowNoSuchWindowException (FailedCommand NoSuchWindow _) = return ()
 swallowNoSuchWindowException e = EL.throw e
+
+closeAllWindowsExceptCurrentInAllSessions (WdSession {wdSessionMap}) = do
+  sessionMap <- readMVar wdSessionMap
+  forM_ (M.toList sessionMap) $ \(_, sess) -> W.runWD sess closeAllWindowsExceptCurrent
+
+closeAllWindowsExceptCurrent = do
+  cur <- getCurrentWindow
+  hs <- windows
+  forM_ [x | x <- hs, x /= cur] $ \h -> catch (closeWindow h) $ \(e :: FailedCommand) ->
+    liftIO $ putStrLn [i|Failed to close window: '#{e}'|]
