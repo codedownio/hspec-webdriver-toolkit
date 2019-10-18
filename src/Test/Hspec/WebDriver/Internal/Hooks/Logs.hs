@@ -79,27 +79,31 @@ flushLogsToFile :: (HasCallStack) =>
   -> IO [LogEntry]
   -- ^ Returns the list of severe log entries, as determine by the log failure function.
 flushLogsToFile logType filterLogs logEntryFormatter sessionWithLabels@(WdSession {..}) =
-  handle (\(e :: EL.SomeException) -> putStrLn [i|Failed to get logs: #{e}|] >> return []) $ do
+  handle (\(e :: EL.SomeException) -> putStrLn [i|Failed to get logs|] >> return []) $ do
     let resultsDir = getResultsDir sessionWithLabels
     createDirectoryIfMissing True resultsDir
 
-    -- Note: we can call getLogTypes to get the list of available log type strings, of which "browser" should be one
+    -- Note: we can call getLogTypes to get the list of available log type strings, of which logType should be one
     -- Remote logging is only supported on some browsers, Chrome and Firefox according to SO.
 
     logFailureFn <- readMVar wdLogFailureFn
     sessionMap <- readMVar wdSessionMap
     failingLogs <- forM (M.toList sessionMap) $ \(browser, sess) -> do
-      logs <- (filter filterLogs) <$> (runWD sess $ getLogs logType)
+      logTypes <- runWD sess getLogTypes
+      case logType `elem` logTypes of
+        False -> return []
+        True -> do
+          logs <- (filter filterLogs) <$> (runWD sess $ getLogs logType)
 
-      -- Write the normal logs
-      writeLogsToFile (resultsDir </> [i|#{browser}_#{logType}_logs.log|]) logs
+          -- Write the normal logs
+          writeLogsToFile (resultsDir </> [i|#{browser}_#{logType}_logs.log|]) logs
 
-      -- If any severe logs are present, write them to a separate file
-      let severeLogs = [x | x <- logs, logLevel x == LogSevere]
-      unless (null severeLogs) $ writeLogsToFile (resultsDir </> [i|#{browser}_severe_#{logType}_logs.log|]) severeLogs
+          -- If any severe logs are present, write them to a separate file
+          let severeLogs = [x | x <- logs, logLevel x == LogSevere]
+          unless (null severeLogs) $ writeLogsToFile (resultsDir </> [i|#{browser}_severe_#{logType}_logs.log|]) severeLogs
 
-      -- Return any failing logs
-      return $ filter logFailureFn logs
+          -- Return any failing logs
+          return $ filter logFailureFn logs
 
     return $ mconcat failingLogs
 
