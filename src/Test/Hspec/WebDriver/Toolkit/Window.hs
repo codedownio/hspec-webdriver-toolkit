@@ -93,14 +93,14 @@ closingExtraWindows action =
               originalFocusedWindow <- getCurrentWindow
               originalWindows <- windows
               return (originalFocusedWindow, originalWindows)
-              )
+          )
           (\(originalFocusedWindow, originalWindows) -> do
               curWindows <- windows
               forM_ (curWindows \\ originalWindows) $ \toClose ->
-                handle swallowNoSuchWindowException (focusWindow toClose >> closeWindow toClose)
+                handle swallowNoSuchWindowException (closeWindow toClose)
 
               handle swallowNoSuchWindowException (focusWindow originalFocusedWindow)
-              )
+          )
           (const action)
 
 -- | Assert that a window should pop up while performing an action.

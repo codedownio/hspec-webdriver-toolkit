@@ -8,4 +8,4 @@ extra-deps:
 # - webdriver-0.9.0.1 # Earlier versions were failing on simple operations with BadJSON error
 
 - github: codedownio/hs-webdriver
-  commit: 96019af419a5bf4c444ef1c8341db33b23dcc03a
+  commit: 8bc94c291838d6d4152138cf4ab94d1db6f8da7e
