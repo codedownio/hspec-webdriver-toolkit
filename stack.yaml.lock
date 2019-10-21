@@ -5,19 +5,19 @@
 
 packages:
 - completed:
-    size: 62475
-    url: https://github.com/codedownio/hs-webdriver/archive/96019af419a5bf4c444ef1c8341db33b23dcc03a.tar.gz
+    size: 62493
+    url: https://github.com/codedownio/hs-webdriver/archive/8bc94c291838d6d4152138cf4ab94d1db6f8da7e.tar.gz
     cabal-file:
       size: 3365
       sha256: 95b810162a436390f83e8aa5e0038bb3a094f2f0ad35f30d3c07e2a3564ae26f
     name: webdriver
     version: 0.9.0.1
-    sha256: 7a6360b8d88ef230ca700ae25159dd790e5948849da9872a1cf946e7d124905d
+    sha256: f5241fc687fb6b2c88fd01b5f906fa6d648924d7b093d447c2a51b9606c8522d
     pantry-tree:
       size: 2934
-      sha256: 518d4db145093238f3fca93ccf27a67d65e0816a89d446e1f03687524dae6b19
+      sha256: 94104badd5973a0ddbb9588fc1cb05923eb5202291b0ef08613c6b2329bcf1ce
   original:
-    url: https://github.com/codedownio/hs-webdriver/archive/96019af419a5bf4c444ef1c8341db33b23dcc03a.tar.gz
+    url: https://github.com/codedownio/hs-webdriver/archive/8bc94c291838d6d4152138cf4ab94d1db6f8da7e.tar.gz
 snapshots:
 - completed:
     size: 498365
