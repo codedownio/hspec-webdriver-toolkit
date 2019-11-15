@@ -47,6 +47,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , executeWithBrowser
   , closeAllSessionsExcept
   , closeAllSessions
+  , closeSession
   , getTestFolder
   , beforeAllWith
   , beforeWith'
