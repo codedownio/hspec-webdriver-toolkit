@@ -50,6 +50,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , closeSession
   , getTestFolder
   , beforeAllWith
+  , beforeAllWith'
   , beforeWith'
   , withCustomLogFailing
   , flushLogsToFile

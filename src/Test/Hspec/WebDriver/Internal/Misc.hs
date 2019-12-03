@@ -3,6 +3,7 @@
 module Test.Hspec.WebDriver.Internal.Misc (
   beforeWith'
   , beforeAllWith
+  , beforeAllWith'
   ) where
 
 
@@ -49,3 +50,33 @@ memoize' mvar action x = do
   case result of
     Left err -> E.throwIO err
     Right () -> return ()
+
+
+data MemoizedValue a = EmptyValue
+                     | MemoizedValue a
+                     | FailedValue E.SomeException
+
+
+-- | Run a custom action before the first spec item, modifying the contents
+beforeAllWith' :: (b -> IO a) -> SpecWith a -> SpecWith b
+beforeAllWith' action spec = do
+  mvar <- runIO (newMVar EmptyValue)
+
+  flip H.aroundWith spec $ \actionExpectingA bValue -> do
+    aValue <- memoize'' mvar action bValue
+    actionExpectingA aValue
+
+
+memoize'' :: MVar (MemoizedValue a) -> (b -> IO a) -> (b -> IO a)
+memoize'' mvar action bValue = do
+  result <- modifyMVar mvar $ \mv -> case mv of
+    EmptyValue -> do
+      (E.try $ action bValue) >>= \case
+        Left err -> return (FailedValue err, Left err)
+        Right aValue -> return (MemoizedValue aValue, Right aValue)
+    MemoizedValue aValue -> return (mv, Right aValue)
+    FailedValue err -> return (mv, Left err)
+
+  case result of
+    Left err -> E.throwIO err
+    Right aValue -> return aValue
