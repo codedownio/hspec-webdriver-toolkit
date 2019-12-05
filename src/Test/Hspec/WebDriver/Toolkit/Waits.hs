@@ -75,7 +75,7 @@ waitUntil200WithTimeout = waitUntil200WithTimeout' 30000000
 waitUntil200WithTimeout' :: (HasCallStack) => Int -> String -> IO ()
 waitUntil200WithTimeout' timeInMicroseconds url = do
   maybeSuccess <- timeout timeInMicroseconds $ waitUntil200 url
-  when (isNothing maybeSuccess) $ error [i|Failed to connect to URL "#{url}" in waitUntil200WithTimeout'...|]
+  when (isNothing maybeSuccess) $ ioError $ userError [i|Failed to connect to URL "#{url}" in waitUntil200WithTimeout'...|]
 
 
 -- * Below is a modified version of Test.WebDriver.Commands.waitUntil which is less silly.
