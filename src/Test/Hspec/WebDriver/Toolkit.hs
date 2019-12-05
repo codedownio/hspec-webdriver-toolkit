@@ -78,6 +78,7 @@ import Data.Default
 import qualified Data.Map as M
 import Data.Time.Clock
 import Data.Time.Format
+import GHC.Stack
 import System.Directory
 import System.FilePath
 import Test.Hspec
@@ -133,7 +134,7 @@ getWdOptions :: WdSession -> WdOptions
 getWdOptions (WdSession {wdOptions}) = wdOptions
 
 -- | Change the log failing function for all functions in this test.
-withCustomLogFailing :: (W.LogEntry -> Bool) -> SpecType -> SpecType
+withCustomLogFailing :: (HasCallStack) => (W.LogEntry -> Bool) -> SpecType -> SpecType
 withCustomLogFailing newFailureFn = aroundWith $ \action session@(WdSession {wdLogFailureFn}) -> do
   bracket (modifyMVar wdLogFailureFn (\current -> return (newFailureFn, current)))
           (\oldFailureFn -> modifyMVar_ wdLogFailureFn $ const $ return oldFailureFn)
