@@ -89,7 +89,8 @@ instance Exception InvalidLogsException
 
 data XvfbSession = XvfbSession { xvfbDisplayNum :: Int
                                , xvfbXauthority :: FilePath
-                               , xvfbDimensions :: (Int, Int) }
+                               , xvfbDimensions :: (Int, Int)
+                               , xvfbProcess :: ProcessHandle }
 
 instance Show XvfbSession where
   show (XvfbSession {xvfbDisplayNum}) = [i|<XVFB session with server num #{xvfbDisplayNum}>|]
