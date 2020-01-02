@@ -11,6 +11,7 @@ import Data.Bits as B
 import qualified Data.ByteString as B
 import Data.Convertible
 import Data.List
+import qualified Data.List as L
 import qualified Data.Map as M
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
@@ -24,22 +25,22 @@ import Test.WebDriver
 import qualified Test.WebDriver as W
 import Test.WebDriver.Exceptions
 
-setWindowLeftSide :: (HasCallStack) => WD ()
-setWindowLeftSide = do
-  (width, height) <- liftIO getScreenResolution
+setWindowLeftSide :: (HasCallStack) => WdSession -> WD ()
+setWindowLeftSide sess = do
+  (width, height) <- liftIO $ getScreenResolution sess
   setWindowPos (0, 0)
   setWindowSize (fromIntegral $ B.shift width (-1), fromIntegral height)
 
-setWindowRightSide :: (HasCallStack) => WD ()
-setWindowRightSide = do
-  (width, height) <- liftIO getScreenResolution
+setWindowRightSide :: (HasCallStack) => WdSession -> WD ()
+setWindowRightSide sess = do
+  (width, height) <- liftIO $ getScreenResolution sess
   let pos = (fromIntegral $ B.shift width (-1), 0)
   setWindowPos pos
   setWindowSize (fromIntegral $ B.shift width (-1), fromIntegral height)
 
-setWindowFullScreen :: (HasCallStack) => WD ()
-setWindowFullScreen = do
-  (width, height) <- liftIO getScreenResolution
+setWindowFullScreen :: (HasCallStack) => WdSession -> WD ()
+setWindowFullScreen sess = do
+  (width, height) <- liftIO $ getScreenResolution sess
   setWindowPos (0, 0)
   setWindowSize (fromIntegral width, fromIntegral height)
 
@@ -49,42 +50,29 @@ whenHeadlessDisplay action = do
     Just x | (x /= ":0") && (x /= ":1") -> action
     _ -> return ()
 
-withWindowFullscreen :: (HasCallStack) => IO a -> WD a
-withWindowFullscreen action = do
+withWindowFullscreen :: (HasCallStack) => WdSession -> IO a -> WD a
+withWindowFullscreen sess action = do
   originalPos <- getWindowPos
   originalSize <- getWindowSize
 
-  bracket (setWindowFullScreen)
+  bracket (setWindowFullScreen sess)
           (\() -> setWindowPos originalPos >> setWindowSize originalSize)
           (\() -> liftIO action)
 
-#ifdef linux_HOST_OS
-getScreenResolution :: (HasCallStack) => IO (Int, Int)
-getScreenResolution = do
-  result <- readCreateProcess (shell [i|xdpyinfo | grep dimensions|]) ""
+getScreenResolution :: (HasCallStack) => WdSession -> IO (Int, Int)
+getScreenResolution (WdSession {wdWebDriver=(_, _, _, _, _, maybeXvfbSession)}) = do
+  envArg <- case maybeXvfbSession of
+    Nothing -> return Nothing
+    Just (XvfbSession {..}) -> do
+      -- Use same environment as shell, but replace DISPLAY arg
+      env' <- liftIO getEnvironment
+      return $ Just $ L.nubBy (\x y -> fst x == fst y) $ [("DISPLAY", ":" <> show xvfbDisplayNum)
+                                                         , ("XAUTHORITY", xvfbXauthority)] <> env'
+
+  result <- readCreateProcess ((shell [i|xdpyinfo | grep dimensions|]) { env=envArg }) ""
   let resolutionPart = (T.words $ convert result) !! 1
   let (widthText:heightText:_) = T.splitOn "x" resolutionPart
   return (read $ convert $ widthText, read $ convert heightText)
-#endif
-
-#ifdef darwin_HOST_OS
-getScreenResolution :: (HasCallStack) => IO (Int, Int)
-getScreenResolution = do
-  -- TODO: get this for real somehow
-  return (1600, 900)
-
-getMacScreenNumber :: (HasCallStack) => IO (Maybe Int)
-getMacScreenNumber =
-  readMay <$> readCreateProcess (shell [i|ffmpeg -f avfoundation -list_devices true -i "" 2>&1 | grep "Capture screen 0" | grep -Eo "\\[(\\d+)\\]" | sed 's/\\[//' | sed 's/\\]//'|]) ""
-#endif
-
-#ifdef mingw32_HOST_OS
--- TODO: define getScreenResolution for WindowsgetScreenResolution :: IO (Int, Int)
-getScreenResolution :: (HasCallStack) => IO (Int, Int)
-getScreenResolution = do
-  -- TODO: get this for real somehow
-  return (1600, 900)
-#endif
 
 -- | Ensure that any extra windows opened over the course of an action are closed after it
 closingExtraWindows :: (HasCallStack) => WD () -> WD ()
