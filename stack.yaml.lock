@@ -20,7 +20,7 @@ packages:
     url: https://github.com/codedownio/hs-webdriver/archive/8bc94c291838d6d4152138cf4ab94d1db6f8da7e.tar.gz
 snapshots:
 - completed:
-    size: 498365
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/18.yaml
-    sha256: c813b03544da8a9053b722f00f3f9a0aade23443130ac7160fefa89e01f5fb17
-  original: lts-13.18
+    size: 524162
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/21.yaml
+    sha256: 9a55dd75853718f2bbbe951872b36a3b7802fcd71796e0f25b8664f24e34c666
+  original: lts-14.21

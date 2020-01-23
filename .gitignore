@@ -3,3 +3,4 @@ hspec-webdriver-toolkit.cabal
 *~
 /test_tools
 /test_runs
+dist-newstyle
