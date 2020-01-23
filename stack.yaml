@@ -5,5 +5,5 @@ packages:
 - .
 
 extra-deps:
-- github: codedownio/hs-webdriver
+- git: https://github.com/codedownio/hs-webdriver
   commit: 8bc94c291838d6d4152138cf4ab94d1db6f8da7e
