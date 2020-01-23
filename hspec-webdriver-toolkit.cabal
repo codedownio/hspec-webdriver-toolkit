@@ -1,0 +1,183 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 35bb19d28172b9091180ff203fe50883819b2a9f09190bf0dceebfe583113d5a
+
+name:           hspec-webdriver-toolkit
+version:        0.1.0.0
+synopsis:       Batteries-including toolkit for running Selenium WebDriver tests
+description:    Please see the README on GitHub at <https://github.com/githubuser/hspec-webdriver-simple#readme>
+category:       Web
+homepage:       https://github.com/githubuser/hspec-webdriver-toolkit#readme
+bug-reports:    https://github.com/githubuser/hspec-webdriver-toolkit/issues
+author:         Tom McLaughlin
+maintainer:     tom@codedown.io
+copyright:      2019 Tom McLaughlin
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/hspec-webdriver-toolkit
+
+library
+  exposed-modules:
+      Test.Hspec.WebDriver.Toolkit
+      Test.Hspec.WebDriver.Toolkit.Capabilities
+      Test.Hspec.WebDriver.Toolkit.Expectations
+      Test.Hspec.WebDriver.Toolkit.Waits
+      Test.Hspec.WebDriver.Toolkit.Window
+  other-modules:
+      Test.Hspec.WebDriver.Internal.Binaries
+      Test.Hspec.WebDriver.Internal.Binaries.Util
+      Test.Hspec.WebDriver.Internal.Exceptions
+      Test.Hspec.WebDriver.Internal.Hooks.Logs
+      Test.Hspec.WebDriver.Internal.Hooks.Screenshots
+      Test.Hspec.WebDriver.Internal.Hooks.Timing
+      Test.Hspec.WebDriver.Internal.Hooks.Timing.TreeMap
+      Test.Hspec.WebDriver.Internal.Hooks.Video
+      Test.Hspec.WebDriver.Internal.Lib
+      Test.Hspec.WebDriver.Internal.Misc
+      Test.Hspec.WebDriver.Internal.Ports
+      Test.Hspec.WebDriver.Internal.Types
+      Test.Hspec.WebDriver.Internal.Util
+      Test.Hspec.WebDriver.Internal.WebDriver
+      Test.Hspec.WebDriver.Internal.Wrap
+      Paths_hspec_webdriver_toolkit
+  hs-source-dirs:
+      src
+  default-extensions: OverloadedStrings QuasiQuotes NamedFieldPuns RecordWildCards ScopedTypeVariables FlexibleContexts FlexibleInstances LambdaCase
+  ghc-options: -W
+  build-depends:
+      HTTP
+    , HUnit
+    , aeson
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , convertible
+    , data-default
+    , directory
+    , exceptions
+    , filepath
+    , hspec
+    , hspec-core
+    , http-client
+    , http-conduit
+    , interpolate
+    , lens
+    , lens-aeson
+    , lifted-base
+    , monad-control
+    , network
+    , process
+    , random
+    , retry
+    , safe
+    , temporary
+    , text
+    , time
+    , transformers
+    , transformers-base
+    , unix
+    , unordered-containers
+    , webdriver
+  default-language: Haskell2010
+
+executable hspec-webdriver-toolkit-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_hspec_webdriver_toolkit
+  hs-source-dirs:
+      app
+  default-extensions: OverloadedStrings QuasiQuotes NamedFieldPuns RecordWildCards ScopedTypeVariables FlexibleContexts FlexibleInstances LambdaCase
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HTTP
+    , HUnit
+    , aeson
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , convertible
+    , data-default
+    , directory
+    , exceptions
+    , filepath
+    , hspec
+    , hspec-core
+    , hspec-webdriver-toolkit
+    , http-client
+    , http-conduit
+    , interpolate
+    , lens
+    , lens-aeson
+    , lifted-base
+    , monad-control
+    , network
+    , process
+    , random
+    , retry
+    , safe
+    , temporary
+    , text
+    , time
+    , transformers
+    , transformers-base
+    , unix
+    , unordered-containers
+    , webdriver
+  default-language: Haskell2010
+
+test-suite hspec-webdriver-toolkit-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_hspec_webdriver_toolkit
+  hs-source-dirs:
+      test
+  default-extensions: OverloadedStrings QuasiQuotes NamedFieldPuns RecordWildCards ScopedTypeVariables FlexibleContexts FlexibleInstances LambdaCase
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HTTP
+    , HUnit
+    , aeson
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , convertible
+    , data-default
+    , directory
+    , exceptions
+    , filepath
+    , hspec
+    , hspec-core
+    , hspec-webdriver-toolkit
+    , http-client
+    , http-conduit
+    , interpolate
+    , lens
+    , lens-aeson
+    , lifted-base
+    , monad-control
+    , network
+    , process
+    , random
+    , retry
+    , safe
+    , temporary
+    , text
+    , time
+    , transformers
+    , transformers-base
+    , unix
+    , unordered-containers
+    , webdriver
+  default-language: Haskell2010
