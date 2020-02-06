@@ -39,7 +39,7 @@ instance Example WdExample where
     return $ Result "" Success
 
 
-runActionWithBrowser :: Browser -> W.WD a -> WdSession -> IO a
+runActionWithBrowser :: (HasCallStack) => Browser -> W.WD a -> WdSession -> IO a
 runActionWithBrowser browser action sessionWithLabels@(WdSession {..}) = do
   -- Create new session if necessary (this can throw an exception)
   sess <- modifyMVar wdSessionMap $ \sessionMap -> case M.lookup browser sessionMap of
@@ -77,34 +77,34 @@ runActionWithBrowser browser action sessionWithLabels@(WdSession {..}) = do
           handleTestException sessionWithLabels (SomeException e)
           throw e
 
-runWithBrowser :: Browser -> W.WD () -> WdExample
+runWithBrowser :: (HasCallStack) => Browser -> W.WD () -> WdExample
 runWithBrowser = WdExample
 
-runWithBrowser' :: Browser -> W.WD () -> WdSession -> IO ()
+runWithBrowser' :: (HasCallStack) => Browser -> W.WD () -> WdSession -> IO ()
 runWithBrowser' browser action session = do
   runActionWithBrowser browser action session
 
-runEveryBrowser :: W.WD () -> WdExample
+runEveryBrowser :: (HasCallStack) => W.WD () -> WdExample
 runEveryBrowser = WdExampleEveryBrowser
 
-runEveryBrowser' :: W.WD () -> WdSession -> IO ()
+runEveryBrowser' :: (HasCallStack) => W.WD () -> WdSession -> IO ()
 runEveryBrowser' action session@(WdSession {wdSessionMap}) = do
   sessionMap <- readMVar wdSessionMap
   forM_ (M.toList sessionMap) $ \(browser, _) -> do
     runActionWithBrowser browser action session
 
-executeWithBrowser :: Browser -> WdSession -> W.WD a -> W.WD a
+executeWithBrowser :: (HasCallStack) => Browser -> WdSession -> W.WD a -> W.WD a
 executeWithBrowser browser session action = do
   liftIO $ runActionWithBrowser browser action session
 
-closeSession :: Browser -> WdSession -> IO ()
+closeSession :: (HasCallStack) => Browser -> WdSession -> IO ()
 closeSession browser (WdSession {wdSessionMap}) = do
   modifyMVar_ wdSessionMap $ \sessionMap -> do
     whenJust (M.lookup browser sessionMap) $ \sess ->
       W.runWD sess W.closeSession
     return $ M.delete browser sessionMap
 
-closeAllSessionsExcept :: [Browser] -> WdSession -> IO ()
+closeAllSessionsExcept :: (HasCallStack) => [Browser] -> WdSession -> IO ()
 closeAllSessionsExcept toKeep (WdSession {wdSessionMap}) = do
   modifyMVar_ wdSessionMap $ \sessionMap -> do
     forM_ (M.toList sessionMap) $ \(name, sess) -> unless (name `elem` toKeep) $
@@ -112,5 +112,5 @@ closeAllSessionsExcept toKeep (WdSession {wdSessionMap}) = do
             (\(e :: SomeException) -> putStrLn [i|Failed to destroy session '#{name}': '#{e}'|])
     return $ M.fromList [(b, s) | (b, s) <- M.toList sessionMap, b `elem` toKeep]
 
-closeAllSessions :: WdSession -> IO ()
+closeAllSessions :: (HasCallStack) => WdSession -> IO ()
 closeAllSessions = closeAllSessionsExcept []
