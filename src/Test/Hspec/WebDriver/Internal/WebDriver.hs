@@ -70,6 +70,7 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
     std_in = Inherit
     , std_out = UseHandle hout
     , std_err = UseHandle herr
+    , create_group = True
     }
   -- Normally Selenium prints the ready message to stderr. However, when we're running under
   -- XVFB the two streams get combined and sent to stdout; see
@@ -101,7 +102,7 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
 
 stopWebDriver :: WdSession -> IO ()
 stopWebDriver (WdSession {wdWebDriver=(hout, herr, h, _, _, maybeXvfbSession)}) = do
-  terminateProcess h >> waitForProcess h
+  interruptProcessGroupOf h >> waitForProcess h
   hClose hout
   hClose herr
 
