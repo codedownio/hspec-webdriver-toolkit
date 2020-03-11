@@ -85,7 +85,9 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
       _ -> T.readFile (logsDir </> seleniumOutFileName) >>= \case
         t | readyMessage `T.isInfixOf` t -> return True
         _ -> return False
-  unless success $ error [i|Selenium server failed to start after 60 seconds|]
+  unless success $ do
+    interruptProcessGroupOf p >> waitForProcess p
+    error [i|Selenium server failed to start after 60 seconds|]
 
   -- Make the WdSession
   WdSession <$> pure []
