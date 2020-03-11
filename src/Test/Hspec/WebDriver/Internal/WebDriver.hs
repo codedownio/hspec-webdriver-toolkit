@@ -107,7 +107,7 @@ stopWebDriver (WdSession {wdWebDriver=(hout, herr, h, _, _, maybeXvfbSession)}) 
   hClose herr
 
   whenJust maybeXvfbSession $ \(XvfbSession {..}) -> do
-    terminateProcess xvfbProcess >> waitForProcess xvfbProcess
+    interruptProcessGroupOf xvfbProcess >> waitForProcess xvfbProcess
 
 -- * Util
 
@@ -152,7 +152,8 @@ getWebdriverCreateProcess (WdOptions {toolsRoot, runMode, runRoot}) port = runEx
                                                             , "-screen", "0", [i|#{w}x#{h}x24|]
                                                             , "-displayfd", [i|#{fd}|]
                                                             , "-auth", authFile
-                                                            ]) { cwd = Just runRoot }
+                                                            ]) { cwd = Just runRoot
+                                                               , create_group = True }
 
       -- When a displayfd filepath is provided, try to obtain the X11 screen
       xvfbSession@(XvfbSession {..}) <- liftIO $ do
