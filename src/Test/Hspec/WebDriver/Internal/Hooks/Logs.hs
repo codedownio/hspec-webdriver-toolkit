@@ -12,12 +12,14 @@ module Test.Hspec.WebDriver.Internal.Hooks.Logs (
   , saveBrowserLogsIfConfigured
 
   , flushLogsToFile
+  , defaultLogEntryFormatter
   ) where
 
 import Control.Concurrent
 import Control.Exception.Lifted as EL
 import Control.Monad
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Data.String.Interpolate.IsString
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -35,19 +37,30 @@ import Test.WebDriver
 -- * Hooks
 
 -- | Save the browser logs for each test to the results directory.
-saveBrowserLogs :: Hook
-saveBrowserLogs = beforeAllWith $ \(WdSession {wdSaveBrowserLogs}) ->
-  modifyMVar_ wdSaveBrowserLogs $ const $ return True
+saveBrowserLogs :: M.Map LogType (LogEntry -> Bool, LogEntry -> T.Text) -> Hook
+saveBrowserLogs logTypes = beforeAllWith $ \(WdSession {..}) -> do
+  sessionMap <- readMVar wdSessionMap
+
+  forM_ (M.toList sessionMap) $ \(_, sess) -> do
+    supportedLogTypes <- S.fromList <$> runWD sess getLogTypes
+
+    let unsupportedLogTypes = (S.fromList $ M.keys logTypes) S.\\ supportedLogTypes
+    when (unsupportedLogTypes /= mempty) $
+      error [i|The following log types were not supported: '#{unsupportedLogTypes}'|]
+
+  modifyMVar_ wdSaveBrowserLogs $ const $ return logTypes
 
 -- | Fail a test when severe browser logs are found. Implies 'saveBrowserLogs'.
 failOnSevereBrowserLogs :: Hook
 failOnSevereBrowserLogs = failOnCertainBrowserLogs predicate
   where predicate (LogEntry {logLevel}) = logLevel == LogSevere
 
--- | Fail a test when logs matching a predicate are found. Implies 'saveBrowserLogs'.
+-- | Fail a test when logs matching a predicate are found. Implies 'saveBrowserLogs ["browser"]'.
 failOnCertainBrowserLogs :: (LogEntry -> Bool) -> Hook
 failOnCertainBrowserLogs predicate = beforeAllWith $ \(WdSession {wdLogFailureFn, wdSaveBrowserLogs}) -> do
-  modifyMVar_ wdSaveBrowserLogs $ const $ return True
+  modifyMVar_ wdSaveBrowserLogs $ \logTypes -> return $ case M.lookup "browser" logTypes of
+    Nothing -> M.insert "browser" (const True, defaultLogEntryFormatter) logTypes
+    Just _ -> logTypes
   modifyMVar_ wdLogFailureFn $ const $ return predicate
 
 -- | Save the webdriver logs for each test to the results directory.
@@ -79,7 +92,7 @@ flushLogsToFile :: (HasCallStack) =>
   -> IO [LogEntry]
   -- ^ Returns the list of severe log entries, as determine by the log failure function.
 flushLogsToFile logType filterLogs logEntryFormatter sessionWithLabels@(WdSession {..}) =
-  handle (\(e :: EL.SomeException) -> putStrLn [i|Failed to get logs|] >> return []) $ do
+  handle (\(e :: EL.SomeException) -> putStrLn [i|Failed to get logs of type '#{logType}': '#{e}'|] >> return []) $ do
     let resultsDir = getResultsDir sessionWithLabels
     createDirectoryIfMissing True resultsDir
 
@@ -88,24 +101,18 @@ flushLogsToFile logType filterLogs logEntryFormatter sessionWithLabels@(WdSessio
 
     logFailureFn <- readMVar wdLogFailureFn
     sessionMap <- readMVar wdSessionMap
-    failingLogs <- forM (M.toList sessionMap) $ \(browser, sess) -> do
-      logTypes <- runWD sess getLogTypes
-      case logType `elem` logTypes of
-        False -> return []
-        True -> do
-          logs <- (filter filterLogs) <$> (runWD sess $ getLogs logType)
+    (mconcat <$>) $ forM (M.toList sessionMap) $ \(browser, sess) -> do
+      logs <- (filter filterLogs) <$> (runWD sess $ getLogs logType)
 
-          -- Write the normal logs
-          writeLogsToFile (resultsDir </> [i|#{browser}_#{logType}_logs.log|]) logs
+      -- Write the normal logs
+      writeLogsToFile (resultsDir </> [i|#{browser}_#{logType}_logs.log|]) logs
 
-          -- If any severe logs are present, write them to a separate file
-          let severeLogs = [x | x <- logs, logLevel x == LogSevere]
-          unless (null severeLogs) $ writeLogsToFile (resultsDir </> [i|#{browser}_severe_#{logType}_logs.log|]) severeLogs
+      -- If any severe logs are present, write them to a separate file
+      let severeLogs = [x | x <- logs, logLevel x == LogSevere]
+      unless (null severeLogs) $ writeLogsToFile (resultsDir </> [i|#{browser}_severe_#{logType}_logs.log|]) severeLogs
 
-          -- Return any failing logs
-          return $ filter logFailureFn logs
-
-    return $ mconcat failingLogs
+      -- Return any failing logs
+      return $ filter logFailureFn logs
 
   where
     writeLogsToFile :: (HasCallStack) => (HasCallStack) => FilePath -> [LogEntry] -> IO ()
@@ -115,9 +122,11 @@ flushLogsToFile logType filterLogs logEntryFormatter sessionWithLabels@(WdSessio
 
 -- | The return value contains any log entries which failed the wdLogFailureFn.
 saveBrowserLogsIfConfigured :: WdSession -> IO [LogEntry]
-saveBrowserLogsIfConfigured sess =
-  handle (\(e :: SomeException) -> putStrLn [i|Error saving browser logs: '#{e}'|] >> return [])
-         (flushLogsToFile "browser" (const True) defaultLogEntryFormatter sess)
+saveBrowserLogsIfConfigured sess@(WdSession {wdSaveBrowserLogs}) = do
+  logTypes <- readMVar wdSaveBrowserLogs
+  (mconcat <$>) $ forM (M.toList logTypes) $ \(logType, (filterFn, formatFn)) ->
+    handle (\(e :: SomeException) -> putStrLn [i|Error saving browser logs: '#{e}'|] >> return [])
+           (flushLogsToFile logType filterFn formatFn sess)
 
 defaultLogEntryFormatter :: LogEntry -> T.Text
 defaultLogEntryFormatter (LogEntry time level msg) = [i|#{time}\t#{level}\t#{msg}|]

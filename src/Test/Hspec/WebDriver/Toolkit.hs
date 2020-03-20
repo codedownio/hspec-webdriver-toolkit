@@ -32,9 +32,15 @@ module Test.Hspec.WebDriver.Toolkit (
 
   -- ** Log saving
   , saveBrowserLogs
+  , defaultLogEntryFormatter
   , failOnSevereBrowserLogs
   , failOnCertainBrowserLogs
   , saveWebDriverLogs
+
+  -- ** Websocket log saving
+  , isWebsocketEntry
+  , formatWebsocketEntry
+  , ignoreSocketFailures
 
   -- ** Test timing
   , recordTestTiming
@@ -91,6 +97,7 @@ import Test.Hspec.WebDriver.Internal.Misc
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
 import Test.Hspec.WebDriver.Internal.WebDriver
+import Test.Hspec.WebDriver.Internal.Websockets
 import Test.Hspec.WebDriver.Internal.Wrap
 import Test.Hspec.WebDriver.Toolkit.Capabilities
 import Test.Hspec.WebDriver.Toolkit.Expectations
@@ -102,7 +109,7 @@ import qualified Test.WebDriver.Session as W
 defaultHooks :: Hook
 defaultHooks = screenshotBeforeAndAfterTest
   . recordErrorVideos def
-  . saveBrowserLogs
+  . saveBrowserLogs (M.singleton "browser" (const True, defaultLogEntryFormatter))
 
 -- | All possible test instrumentation.
 allHooks :: Hook

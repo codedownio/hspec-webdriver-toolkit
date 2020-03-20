@@ -11,17 +11,20 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as T
 import Test.WebDriver
 
+loggingPrefs = A.object [("browser", "ALL")
+                        , ("client", "WARNING")
+                        , ("driver", "WARNING")
+                        , ("performance", "ALL")
+                        , ("server", "WARNING")
+                        ]
+
 -- | Default capabilities for regular Chrome.
 -- It's important to set the "browser" log level to "ALL" so that tests can collect browser logs.
 chromeCapabilities :: Capabilities
 chromeCapabilities =
   def {browser=Chrome Nothing Nothing args [] chromePrefs
-      , additionalCaps=[("loggingPrefs", A.object [("browser", "ALL")
-                                                  , ("client", "WARNING")
-                                                  , ("driver", "WARNING")
-                                                  , ("performance", "ALL")
-                                                  , ("server", "WARNING")
-                                                  ])]
+      , additionalCaps=[("loggingPrefs", loggingPrefs)
+                       , ("goog:loggingPrefs", loggingPrefs)]
       }
   where args = ["--verbose"]
 
@@ -29,7 +32,8 @@ chromeCapabilities =
 headlessChromeCapabilities :: Capabilities
 headlessChromeCapabilities =
   def {browser=Chrome Nothing Nothing args [] chromePrefs
-      , additionalCaps=[("loggingPrefs", A.object [("browser", "ALL")])]
+      , additionalCaps=[("loggingPrefs", loggingPrefs)
+                       , ("goog:loggingPrefs", loggingPrefs)]
       }
   where args = ["--verbose", "--headless"]
 

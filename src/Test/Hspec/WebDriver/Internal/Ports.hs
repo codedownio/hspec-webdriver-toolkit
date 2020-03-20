@@ -49,5 +49,5 @@ findFreePortOrException = findFreePort >>= \case
   Just port -> return port
   Nothing -> error "Couldn't find free port"
 
-findFreePortNotIn :: [N.PortNumber] -> IO (Maybe N.PortNumber)
-findFreePortNotIn = findFreePortInRange (49152, 65535)
+-- findFreePortNotIn :: [N.PortNumber] -> IO (Maybe N.PortNumber)
+-- findFreePortNotIn = findFreePortInRange (49152, 65535)

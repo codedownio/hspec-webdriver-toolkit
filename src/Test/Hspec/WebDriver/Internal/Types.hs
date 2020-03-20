@@ -8,6 +8,7 @@ import qualified Data.Aeson as A
 import Data.Default
 import qualified Data.Map as M
 import Data.String.Interpolate.IsString
+import qualified Data.Text as T
 import GHC.Stack
 import System.IO
 import System.Process
@@ -72,7 +73,7 @@ data WdSession = WdSession { wdLabels :: [String]
                            , wdFailureCounter :: MVar Int
                            , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle, FilePath))
                            , wdTimingInfo :: MVar A.Value
-                           , wdSaveBrowserLogs :: MVar Bool
+                           , wdSaveBrowserLogs :: MVar (M.Map W.LogType (W.LogEntry -> Bool, W.LogEntry -> T.Text))
                            , wdLogFailureFn :: MVar (W.LogEntry -> Bool)
                            -- ^ A function to apply to browser logs at the end of every test. If it returns true, the test is failed. Can be used to fail tests if certain browser logs are found (for example, all 'LogSevere' logs). Defaults to @const False@.
                            , wdConfig :: W.WDConfig }

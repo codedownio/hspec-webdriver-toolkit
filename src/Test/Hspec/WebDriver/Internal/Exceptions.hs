@@ -27,7 +27,7 @@ import Shelly hiding (sleep, (</>), FilePath, run)
 
 
 handleTestException :: (HasCallStack) => WdSession -> EL.SomeException -> IO ()
-handleTestException session@(WdSession {wdOptions=(WdOptions {runRoot, saveSeleniumMessageHistory}), ..}) e = do
+handleTestException session@(WdSession {wdOptions=(WdOptions {runRoot}), ..}) e = do
   let resultsDir = getResultsDir session
   createDirectoryIfMissing True resultsDir
 
