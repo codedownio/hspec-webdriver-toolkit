@@ -18,7 +18,6 @@ module Test.Hspec.WebDriver.Toolkit (
 
   -- ** Default hook sets
   , defaultHooks
-  , allHooks
 
   -- ** Screenshots
   , screenshotBeforeTest
@@ -111,19 +110,14 @@ defaultHooks = screenshotBeforeAndAfterTest
   . recordErrorVideos def
   . saveBrowserLogs (M.singleton "browser" (const True, defaultLogEntryFormatter))
 
--- | All possible test instrumentation.
-allHooks :: Hook
-allHooks = undefined
-
 -- | Start a Selenium server and run a spec inside it.
 -- Auto-detects the browser version and downloads the Selenium .jar file and driver executable if necessary.
-runWebDriver :: WdOptions -> Hook -> SpecWith WdSession -> Spec
-runWebDriver wdOptions hooks tests =
+runWebDriver :: WdOptions -> SpecWith WdSession -> Spec
+runWebDriver wdOptions tests =
   beforeAll (startWebDriver wdOptions) $
   afterAll stopWebDriver $
   afterAll closeAllSessions $
   addLabelsToTree (\labels sessionWithLabels -> sessionWithLabels { wdLabels = labels }) $
-  hooks $
   tests
 
 -- | Create a timestamp-named folder to contain the results of a given test run
