@@ -20,11 +20,11 @@ type Browser = String
 
 type SpecType = SpecWith WdSession
 
-class HasSession a where
-  getSession :: a -> WdSession
+class HasWdSession a where
+  getWdSession :: a -> WdSession
 
-instance HasSession WdSession where
-  getSession = id
+instance HasWdSession WdSession where
+  getWdSession = id
 
 type Hook = (HasCallStack) => SpecType -> SpecType
 

@@ -67,6 +67,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , ToolsRoot
   , RunRoot
   , WdSession(..)
+  , HasWdSession(..)
   , WdExample
   , getSessionMap
   , getWdOptions
@@ -135,8 +136,8 @@ getWdOptions :: WdSession -> WdOptions
 getWdOptions (WdSession {wdOptions}) = wdOptions
 
 -- | Change the log failing function for all functions in this test.
-withCustomLogFailing :: (HasCallStack, HasSession a) => (W.LogEntry -> Bool) -> SpecWith a -> SpecWith a
-withCustomLogFailing newFailureFn = aroundWith $ \action value@(getSession -> (WdSession {wdLogFailureFn})) -> do
+withCustomLogFailing :: (HasCallStack, HasWdSession a) => (W.LogEntry -> Bool) -> SpecWith a -> SpecWith a
+withCustomLogFailing newFailureFn = aroundWith $ \action value@(getWdSession -> (WdSession {wdLogFailureFn})) -> do
   bracket (modifyMVar wdLogFailureFn (\current -> return (newFailureFn, current)))
           (\oldFailureFn -> modifyMVar_ wdLogFailureFn $ const $ return oldFailureFn)
           (\_ -> action value)
