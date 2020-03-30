@@ -20,6 +20,12 @@ type Browser = String
 
 type SpecType = SpecWith WdSession
 
+class HasSession a where
+  getSession :: a -> WdSession
+
+instance HasSession WdSession where
+  getSession = id
+
 type Hook = (HasCallStack) => SpecType -> SpecType
 
 type ToolsRoot = FilePath

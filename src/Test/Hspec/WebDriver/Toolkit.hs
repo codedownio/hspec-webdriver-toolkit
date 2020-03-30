@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, Rank2Types #-}
+{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, Rank2Types, ViewPatterns #-}
 
 module Test.Hspec.WebDriver.Toolkit (
   -- * Main hooks
@@ -135,8 +135,8 @@ getWdOptions :: WdSession -> WdOptions
 getWdOptions (WdSession {wdOptions}) = wdOptions
 
 -- | Change the log failing function for all functions in this test.
-withCustomLogFailing :: (HasCallStack) => (W.LogEntry -> Bool) -> SpecType -> SpecType
-withCustomLogFailing newFailureFn = aroundWith $ \action session@(WdSession {wdLogFailureFn}) -> do
+withCustomLogFailing :: (HasCallStack, HasSession a) => (W.LogEntry -> Bool) -> SpecWith a -> SpecWith a
+withCustomLogFailing newFailureFn = aroundWith $ \action value@(getSession -> (WdSession {wdLogFailureFn})) -> do
   bracket (modifyMVar wdLogFailureFn (\current -> return (newFailureFn, current)))
           (\oldFailureFn -> modifyMVar_ wdLogFailureFn $ const $ return oldFailureFn)
-          (\_ -> action session)
+          (\_ -> action value)
