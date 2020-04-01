@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes #-}
+{-# LANGUAGE TypeFamilies, InstanceSigs, ScopedTypeVariables, QuasiQuotes, ViewPatterns #-}
 
 module Test.Hspec.WebDriver.Internal.Lib where
 
@@ -19,15 +19,15 @@ import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Config as W
 import qualified Test.WebDriver.Session as W
 
-instance Example WdExample where
-  type Arg WdExample = WdSession
+instance HasWdSession a => Example (WdExample a) where
+  type Arg (WdExample a) = a
 
-  evaluateExample :: (HasCallStack) => WdExample -> Params -> (ActionWith (Arg WdExample) -> IO ()) -> ProgressCallback -> IO Result
+  evaluateExample :: (HasCallStack) => WdExample a -> Params -> (ActionWith (Arg (WdExample a)) -> IO ()) -> ProgressCallback -> IO Result
 
   evaluateExample (WdPending msg) _ _ _ = return $ Result "" $ Pending Nothing msg
 
   evaluateExample (WdExampleEveryBrowser action) _ act _ = do
-    act $ \session@(WdSession {wdSessionMap}) -> do
+    act $ \(getWdSession -> session@(WdSession {wdSessionMap})) -> do
       sessionMap <- readMVar wdSessionMap
       forM_ (M.toList sessionMap) $ \(browser, _) -> do
         runActionWithBrowser browser action session
@@ -35,7 +35,7 @@ instance Example WdExample where
     return $ Result "" Success
 
   evaluateExample (WdExample browser action) _ act _ = do
-    act $ runActionWithBrowser browser action
+    act $ \(getWdSession -> session) -> runActionWithBrowser browser action session
     return $ Result "" Success
 
 
@@ -77,18 +77,18 @@ runActionWithBrowser browser action sessionWithLabels@(WdSession {..}) = do
           handleTestException sessionWithLabels (SomeException e)
           throw e
 
-runWithBrowser :: (HasCallStack) => Browser -> W.WD () -> WdExample
+runWithBrowser :: (HasCallStack, HasWdSession a) => Browser -> W.WD () -> WdExample a
 runWithBrowser = WdExample
 
-runWithBrowser' :: (HasCallStack) => Browser -> W.WD () -> WdSession -> IO ()
-runWithBrowser' browser action session = do
-  runActionWithBrowser browser action session
+runWithBrowser' :: (HasCallStack, HasWdSession a) => Browser -> W.WD () -> a -> IO ()
+runWithBrowser' browser action hasSession = do
+  runActionWithBrowser browser action (getWdSession hasSession)
 
-runEveryBrowser :: (HasCallStack) => W.WD () -> WdExample
+runEveryBrowser :: (HasCallStack, HasWdSession a) => W.WD () -> WdExample a
 runEveryBrowser = WdExampleEveryBrowser
 
-runEveryBrowser' :: (HasCallStack) => W.WD () -> WdSession -> IO ()
-runEveryBrowser' action session@(WdSession {wdSessionMap}) = do
+runEveryBrowser' :: (HasCallStack, HasWdSession a) => W.WD () -> a -> IO ()
+runEveryBrowser' action (getWdSession -> session@(WdSession {wdSessionMap})) = do
   sessionMap <- readMVar wdSessionMap
   forM_ (M.toList sessionMap) $ \(browser, _) -> do
     runActionWithBrowser browser action session

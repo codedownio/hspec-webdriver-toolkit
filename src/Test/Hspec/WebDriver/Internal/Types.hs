@@ -84,10 +84,12 @@ data WdSession = WdSession { wdLabels :: [String]
                            -- ^ A function to apply to browser logs at the end of every test. If it returns true, the test is failed. Can be used to fail tests if certain browser logs are found (for example, all 'LogSevere' logs). Defaults to @const False@.
                            , wdConfig :: W.WDConfig }
 
-data WdExample = WdExample { wdBrowser :: Browser
-                           , wdAction :: W.WD () }
-               | WdExampleEveryBrowser { wdAction :: W.WD () }
-               | WdPending { wdPendingMsg :: Maybe String }
+-- | The type parameter represents the value inside the 'SpecWith', which should be
+-- HasWdSession
+data WdExample a = WdExample { wdBrowser :: Browser
+                             , wdAction :: W.WD () }
+                 | WdExampleEveryBrowser { wdAction :: W.WD () }
+                 | WdPending { wdPendingMsg :: Maybe String }
 
 data InvalidLogsException = InvalidLogsException [W.LogEntry]
   deriving (Show)
