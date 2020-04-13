@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1a6280fd32a21cbfae874a342f40662a55825ea244c04ace3b2d76cccc208c2a
+-- hash: f053f83a8cb9179af4030ba6c965c2ddcb0a11398bb39d10da50315b1c9c2d11
 
 name:           hspec-webdriver-toolkit
 version:        0.1.0.0
@@ -35,6 +35,7 @@ library
       Test.Hspec.WebDriver.Toolkit.Waits
       Test.Hspec.WebDriver.Toolkit.Window
   other-modules:
+      Test.Hspec.WebDriver.Internal.AroundAll
       Test.Hspec.WebDriver.Internal.Binaries
       Test.Hspec.WebDriver.Internal.Binaries.Util
       Test.Hspec.WebDriver.Internal.Exceptions
@@ -60,6 +61,7 @@ library
       HTTP
     , HUnit
     , aeson
+    , async
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -104,6 +106,7 @@ executable hspec-webdriver-toolkit-exe
       HTTP
     , HUnit
     , aeson
+    , async
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -150,6 +153,7 @@ test-suite hspec-webdriver-toolkit-test
       HTTP
     , HUnit
     , aeson
+    , async
     , base >=4.7 && <5
     , bytestring
     , containers

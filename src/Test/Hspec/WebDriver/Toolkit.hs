@@ -54,6 +54,8 @@ module Test.Hspec.WebDriver.Toolkit (
   , closeAllSessions
   , closeSession
   , getTestFolder
+  , aroundAll
+  , aroundAllWith
   , beforeAllWith
   , beforeAllWith'
   , beforeWith'
@@ -88,6 +90,7 @@ import GHC.Stack
 import System.Directory
 import System.FilePath
 import Test.Hspec
+import Test.Hspec.WebDriver.Internal.AroundAll
 import Test.Hspec.WebDriver.Internal.Hooks.Logs
 import Test.Hspec.WebDriver.Internal.Hooks.Screenshots
 import Test.Hspec.WebDriver.Internal.Hooks.Timing
