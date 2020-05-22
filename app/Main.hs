@@ -61,7 +61,7 @@ main = do
   --   saveBrowserLogs
   --   ) tests
   hspec $ runWebDriver wdOptions $ (recordTestTiming
-                                    . saveWebDriverLogs
+                                    . after saveWebDriverLogs
                                     . recordEntireVideo def
                                     . recordErrorVideos def
                                     . recordIndividualVideos def

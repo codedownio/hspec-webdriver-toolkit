@@ -23,6 +23,7 @@ module Test.Hspec.WebDriver.Toolkit (
   , screenshotBeforeTest
   , screenshotAfterTest
   , screenshotBeforeAndAfterTest
+  , saveScreenshots
 
   -- ** Video recording
   , recordEntireVideo
@@ -112,7 +113,7 @@ import qualified Test.WebDriver.Session as W
 defaultHooks :: Hook
 defaultHooks = screenshotBeforeAndAfterTest
   . recordErrorVideos def
-  . saveBrowserLogs (M.singleton "browser" (const True, defaultLogEntryFormatter))
+  . beforeAllWith (saveBrowserLogs (M.singleton "browser" (const True, defaultLogEntryFormatter)))
 
 -- | Start a Selenium server and run a spec inside it.
 -- Auto-detects the browser version and downloads the Selenium .jar file and driver executable if necessary.

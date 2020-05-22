@@ -1,5 +1,4 @@
-
-{-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, CPP, QuasiQuotes, RecordWildCards #-}
+{-# LANGUAGE RankNTypes, MultiWayIf, ScopedTypeVariables, CPP, QuasiQuotes, RecordWildCards, ViewPatterns #-}
 
 module Test.Hspec.WebDriver.Internal.Hooks.Logs (
   saveBrowserLogs
@@ -27,8 +26,6 @@ import GHC.Stack
 import System.Directory
 import System.FilePath
 import System.IO
-import Test.Hspec
-import Test.Hspec.WebDriver.Internal.Misc
 import Test.Hspec.WebDriver.Internal.Types
 import Test.Hspec.WebDriver.Internal.Util
 import Test.WebDriver
@@ -37,8 +34,8 @@ import Test.WebDriver
 -- * Hooks
 
 -- | Save the browser logs for each test to the results directory.
-saveBrowserLogs :: M.Map LogType (LogEntry -> Bool, LogEntry -> T.Text) -> Hook
-saveBrowserLogs logTypes = beforeAllWith $ \(WdSession {..}) -> do
+saveBrowserLogs :: (HasWdSession a) => M.Map LogType (LogEntry -> Bool, LogEntry -> T.Text) -> a -> IO ()
+saveBrowserLogs logTypes (getWdSession -> (WdSession {..})) = do
   sessionMap <- readMVar wdSessionMap
 
   forM_ (M.toList sessionMap) $ \(_, sess) -> do
@@ -51,21 +48,21 @@ saveBrowserLogs logTypes = beforeAllWith $ \(WdSession {..}) -> do
   modifyMVar_ wdSaveBrowserLogs $ const $ return logTypes
 
 -- | Fail a test when severe browser logs are found. Implies 'saveBrowserLogs'.
-failOnSevereBrowserLogs :: Hook
-failOnSevereBrowserLogs = failOnCertainBrowserLogs predicate
+failOnSevereBrowserLogs :: (HasWdSession a) => a -> IO ()
+failOnSevereBrowserLogs hasSession = failOnCertainBrowserLogs predicate hasSession
   where predicate (LogEntry {logLevel}) = logLevel == LogSevere
 
 -- | Fail a test when logs matching a predicate are found. Implies 'saveBrowserLogs ["browser"]'.
-failOnCertainBrowserLogs :: (LogEntry -> Bool) -> Hook
-failOnCertainBrowserLogs predicate = beforeAllWith $ \(WdSession {wdLogFailureFn, wdSaveBrowserLogs}) -> do
+failOnCertainBrowserLogs :: (HasWdSession a) => (LogEntry -> Bool) -> a -> IO ()
+failOnCertainBrowserLogs predicate (getWdSession -> (WdSession {wdLogFailureFn, wdSaveBrowserLogs})) =  do
   modifyMVar_ wdSaveBrowserLogs $ \logTypes -> return $ case M.lookup "browser" logTypes of
     Nothing -> M.insert "browser" (const True, defaultLogEntryFormatter) logTypes
     Just _ -> logTypes
   modifyMVar_ wdLogFailureFn $ const $ return predicate
 
 -- | Save the webdriver logs for each test to the results directory.
-saveWebDriverLogs :: Hook
-saveWebDriverLogs = after $ \sess@(WdSession {wdWebDriver=(_, _, _, stdoutPath, stderrPath, _)}) -> do
+saveWebDriverLogs :: (HasWdSession a) => a -> IO ()
+saveWebDriverLogs (getWdSession -> sess@(WdSession {wdWebDriver=(_, _, _, stdoutPath, stderrPath, _)})) = do
   let resultsDir = getResultsDir sess
   createDirectoryIfMissing True resultsDir
   moveAndTruncate stdoutPath (resultsDir </> seleniumOutFileName)
