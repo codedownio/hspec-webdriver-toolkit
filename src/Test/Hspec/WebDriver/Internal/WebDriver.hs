@@ -95,7 +95,6 @@ startWebDriver wdOptions@(WdOptions {capabilities=capabilities', ..}) = do
             <*> pure wdOptions
             <*> newMVar mempty
             <*> newMVar 0
-            <*> newMVar Nothing
             <*> newMVar (A.object [])
             <*> newMVar mempty
             <*> newMVar (const False)

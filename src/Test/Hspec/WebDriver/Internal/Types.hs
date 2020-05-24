@@ -77,7 +77,6 @@ data WdSession = WdSession { wdLabels :: [String]
                            , wdOptions :: WdOptions
                            , wdSessionMap :: MVar (M.Map Browser W.WDSession)
                            , wdFailureCounter :: MVar Int
-                           , wdEntireTestRunVideo :: MVar (Maybe (Handle, Handle, ProcessHandle, FilePath))
                            , wdTimingInfo :: MVar A.Value
                            , wdSaveBrowserLogs :: MVar (M.Map W.LogType (W.LogEntry -> Bool, W.LogEntry -> T.Text))
                            , wdLogFailureFn :: MVar (W.LogEntry -> Bool)
