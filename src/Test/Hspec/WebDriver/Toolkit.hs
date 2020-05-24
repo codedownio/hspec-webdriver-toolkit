@@ -112,7 +112,7 @@ import qualified Test.WebDriver.Session as W
 -- | A good default set of hooks: `screenshotBeforeAndAfterTest`, `recordErrorVideos`, and `saveBrowserLogs`.
 defaultHooks :: Hook
 defaultHooks = screenshotBeforeAndAfterTest
-  . recordErrorVideos def
+  . aroundWith (recordErrorVideos def)
   . beforeAllWith (saveBrowserLogs (M.singleton "browser" (const True, defaultLogEntryFormatter)))
 
 -- | Start a Selenium server and run a spec inside it.

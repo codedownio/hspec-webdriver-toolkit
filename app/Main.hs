@@ -8,6 +8,7 @@ import Data.String.Interpolate.IsString
 import System.Directory
 import System.FilePath
 import Test.Hspec (hspec, after)
+import Test.Hspec.Core.Hooks
 import Test.Hspec.Core.Spec
 import Test.Hspec.WebDriver.Toolkit
 import Test.WebDriver.Commands
@@ -53,16 +54,10 @@ main = do
         , runMode = RunInXvfb def
         }
 
-  -- hspec $ runWebDriver wdOptions (
-  --   screenshotBeforeAndAfterTest .
-  --   recordEntireVideo .
-  --   recordIndividualVideos .
-  --   saveWebDriverLogs .
-  --   saveBrowserLogs
-  --   ) tests
-  hspec $ runWebDriver wdOptions $ (recordTestTiming
-                                    . after saveWebDriverLogs
-                                    . recordEntireVideo def
-                                    . recordErrorVideos def
-                                    . recordIndividualVideos def
-                                    ) tests
+  hspec $ runWebDriver wdOptions $ (
+    recordTestTiming
+    . after saveWebDriverLogs
+    . aroundAllWith (recordEntireVideo def)
+    . aroundWith (recordErrorVideos def)
+    . aroundWith (recordIndividualVideos def)
+    ) tests
