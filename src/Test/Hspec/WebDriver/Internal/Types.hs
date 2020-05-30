@@ -80,7 +80,10 @@ data WdSession = WdSession { wdLabels :: [String]
                            , wdTimingInfo :: MVar A.Value
                            , wdSaveBrowserLogs :: MVar (M.Map W.LogType (W.LogEntry -> Bool, W.LogEntry -> T.Text))
                            , wdLogFailureFn :: MVar (W.LogEntry -> Bool)
-                           -- ^ A function to apply to browser logs at the end of every test. If it returns true, the test is failed. Can be used to fail tests if certain browser logs are found (for example, all 'LogSevere' logs). Defaults to @const False@.
+                           -- ^ A function to apply to browser logs at the end of every test.
+                           -- If it returns true, the test is failed.
+                           -- Can be used to fail tests if certain browser logs are found (for example, all 'LogSevere' logs).
+                           -- Defaults to @const False@.
                            , wdConfig :: W.WDConfig }
 
 -- | The type parameter represents the value inside the 'SpecWith', which should be
