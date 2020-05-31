@@ -41,4 +41,5 @@ getWebsocketPayload _ = Nothing
 
 ignoreSocketFailures :: LogEntry -> Bool
 ignoreSocketFailures (LogEntry {logMsg}) | "connection establishment" `T.isInfixOf` logMsg = False
+ignoreSocketFailures (LogEntry {logMsg}) | "WebSocket handshake" `T.isInfixOf` logMsg = False
 ignoreSocketFailures (LogEntry {logLevel}) = logLevel == LogSevere
