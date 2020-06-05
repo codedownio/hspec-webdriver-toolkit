@@ -5,9 +5,6 @@
 
 packages:
 - completed:
-    cabal-file:
-      size: 3365
-      sha256: 95b810162a436390f83e8aa5e0038bb3a094f2f0ad35f30d3c07e2a3564ae26f
     name: webdriver
     version: 0.9.0.1
     git: https://github.com/codedownio/hs-webdriver
@@ -20,7 +17,7 @@ packages:
     commit: 8bc94c291838d6d4152138cf4ab94d1db6f8da7e
 snapshots:
 - completed:
-    size: 524162
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/21.yaml
-    sha256: 9a55dd75853718f2bbbe951872b36a3b7802fcd71796e0f25b8664f24e34c666
-  original: lts-14.21
+    size: 496112
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/15.yaml
+    sha256: 86169722ad0056ffc9eacc157ef80ee21d7024f92c0d2961c89ccf432db230a3
+  original: lts-15.15

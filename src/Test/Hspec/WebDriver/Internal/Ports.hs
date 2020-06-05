@@ -7,47 +7,48 @@ module Test.Hspec.WebDriver.Internal.Ports (
 import Control.Exception
 import Control.Retry
 import Data.Maybe
-import qualified Network.Socket as N
+import Network.Socket
 import System.Random (randomRIO)
 
 -- |Find an unused port in a given range
-findFreePortInRange' :: RetryPolicy -> (N.PortNumber, N.PortNumber) -> [N.PortNumber] -> IO (Maybe N.PortNumber)
+findFreePortInRange' :: RetryPolicy -> (PortNumber, PortNumber) -> [PortNumber] -> IO (Maybe PortNumber)
 findFreePortInRange' retryPolicy (start, end) blacklist = retrying retryPolicy (\_retryStatus result -> return $ isNothing result) (const findFreePortInRange')
-  where getAcceptableCandidate :: IO N.PortNumber
+  where getAcceptableCandidate :: IO PortNumber
         getAcceptableCandidate = do
           candidate <- (fromInteger) <$> randomRIO (fromIntegral start, fromIntegral end)
           if | candidate `elem` blacklist -> getAcceptableCandidate
              | otherwise -> return candidate
 
-        findFreePortInRange' :: IO (Maybe N.PortNumber)
+        findFreePortInRange' :: IO (Maybe PortNumber)
         findFreePortInRange' = do
           candidate <- getAcceptableCandidate
           catch (tryOpenAndClosePort candidate >> return (Just candidate)) (\(_ :: SomeException) -> return Nothing)
           where
-            tryOpenAndClosePort :: N.PortNumber -> IO N.PortNumber
+            tryOpenAndClosePort :: PortNumber -> IO PortNumber
             tryOpenAndClosePort port = do
-              sock <- N.socket N.AF_INET N.Stream 0
-              N.setSocketOption sock N.ReuseAddr 1
-              hostAddress <- N.inet_addr "127.0.0.1"
-              N.bind sock (N.SockAddrInet port hostAddress)
-              N.close sock
+              sock <- socket AF_INET Stream 0
+              setSocketOption sock ReuseAddr 1
+              let hints = defaultHints { addrFlags = [AI_NUMERICHOST], addrSocketType = Stream }
+              let hostAddress = tupleToHostAddress (127, 0, 0, 1)
+              bind sock (SockAddrInet port hostAddress)
+              close sock
               return $ fromIntegral port
 
 
-findFreePortInRange :: (N.PortNumber, N.PortNumber) -> [N.PortNumber] -> IO (Maybe N.PortNumber)
+findFreePortInRange :: (PortNumber, PortNumber) -> [PortNumber] -> IO (Maybe PortNumber)
 findFreePortInRange = findFreePortInRange' (limitRetries 50)
 
 -- |Find an unused port in the ephemeral port range.
 -- See https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
 -- This works without a timeout since there should always be a port in the somewhere;
 -- it might be advisable to wrap in a timeout anyway.
-findFreePort :: IO (Maybe N.PortNumber)
+findFreePort :: IO (Maybe PortNumber)
 findFreePort = findFreePortInRange (49152, 65535) []
 
-findFreePortOrException :: IO N.PortNumber
+findFreePortOrException :: IO PortNumber
 findFreePortOrException = findFreePort >>= \case
   Just port -> return port
   Nothing -> error "Couldn't find free port"
 
--- findFreePortNotIn :: [N.PortNumber] -> IO (Maybe N.PortNumber)
+-- findFreePortNotIn :: [PortNumber] -> IO (Maybe PortNumber)
 -- findFreePortNotIn = findFreePortInRange (49152, 65535)
