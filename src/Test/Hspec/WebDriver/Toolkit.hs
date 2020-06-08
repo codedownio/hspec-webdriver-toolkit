@@ -14,11 +14,6 @@ module Test.Hspec.WebDriver.Toolkit (
   , startWebDriver
   , stopWebDriver
 
-  -- * Hooks
-
-  -- ** Default hook sets
-  , defaultHooks
-
   -- ** Screenshots
   , screenshotBeforeTest
   , screenshotAfterTest
@@ -31,10 +26,10 @@ module Test.Hspec.WebDriver.Toolkit (
   , recordErrorVideos
 
   -- ** Log saving
-  , saveBrowserLogs
+  , saveLogs
+  , setLogSaveSettings
   , defaultLogEntryFormatter
   , failOnSevereBrowserLogs
-  , failOnCertainBrowserLogs
   , saveWebDriverLogs
 
   -- ** Websocket log saving
@@ -83,7 +78,6 @@ module Test.Hspec.WebDriver.Toolkit (
 
 import Control.Concurrent
 import Control.Exception
-import Data.Default
 import qualified Data.Map as M
 import Data.Time.Clock
 import Data.Time.Format
@@ -108,12 +102,6 @@ import Test.Hspec.WebDriver.Toolkit.Expectations
 import qualified Test.WebDriver as W
 import qualified Test.WebDriver.Session as W
 
-
--- | A good default set of hooks: `screenshotBeforeAndAfterTest`, `recordErrorVideos`, and `saveBrowserLogs`.
-defaultHooks :: Hook
-defaultHooks = screenshotBeforeAndAfterTest
-  . aroundWith (recordErrorVideos def)
-  . beforeAllWith (saveBrowserLogs (M.singleton "browser" (const True, defaultLogEntryFormatter)))
 
 -- | Start a Selenium server and run a spec inside it.
 -- Auto-detects the browser version and downloads the Selenium .jar file and driver executable if necessary.
@@ -141,7 +129,7 @@ getWdOptions (WdSession {wdOptions}) = wdOptions
 
 -- | Change the log failing function for all functions in this test.
 withCustomLogFailing :: (HasCallStack, HasWdSession a) => (W.LogEntry -> Bool) -> SpecWith a -> SpecWith a
-withCustomLogFailing newFailureFn = aroundWith $ \action value@(getWdSession -> (WdSession {wdLogFailureFn})) -> do
-  bracket (modifyMVar wdLogFailureFn (\current -> return (newFailureFn, current)))
-          (\oldFailureFn -> modifyMVar_ wdLogFailureFn $ const $ return oldFailureFn)
+withCustomLogFailing newFailureFn = aroundWith $ \action value@(getWdSession -> (WdSession {wdSaveBrowserLogs})) -> do
+  bracket (modifyMVar wdSaveBrowserLogs (\current -> return (M.fromList [(logType, (x, y, newFailureFn)) | (logType, (x, y, _)) <- M.toList current], current)))
+          (\oldValue -> modifyMVar_ wdSaveBrowserLogs $ const $ return oldValue)
           (\_ -> action value)

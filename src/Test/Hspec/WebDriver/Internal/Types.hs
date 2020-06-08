@@ -57,6 +57,9 @@ data WdOptions = WdOptions {
   , saveSeleniumMessageHistory :: WhenToSave
   -- ^ When to save a record of Selenium requests and responses
 
+  , saveLogSettings :: SaveLogSettings
+  -- ^ When to save a record of Selenium requests and responses
+
   , runMode :: RunMode
   -- ^ How to handle opening the browser (in a popup window, headless, etc.)
   }
@@ -70,7 +73,9 @@ instance Default XvfbConfig where
   def = XvfbConfig Nothing
 
 defaultWdOptions :: FilePath -> FilePath -> WdOptions
-defaultWdOptions toolsRoot runRoot = WdOptions toolsRoot runRoot def OnException Normal
+defaultWdOptions toolsRoot runRoot = WdOptions toolsRoot runRoot def OnException mempty Normal
+
+type SaveLogSettings = M.Map W.LogType (W.LogEntry -> Bool, W.LogEntry -> T.Text, W.LogEntry -> Bool)
 
 data WdSession = WdSession { wdLabels :: [String]
                            , wdWebDriver :: (Handle, Handle, ProcessHandle, FilePath, FilePath, Maybe XvfbSession)
@@ -78,12 +83,7 @@ data WdSession = WdSession { wdLabels :: [String]
                            , wdSessionMap :: MVar (M.Map Browser W.WDSession)
                            , wdFailureCounter :: MVar Int
                            , wdTimingInfo :: MVar A.Value
-                           , wdSaveBrowserLogs :: MVar (M.Map W.LogType (W.LogEntry -> Bool, W.LogEntry -> T.Text))
-                           , wdLogFailureFn :: MVar (W.LogEntry -> Bool)
-                           -- ^ A function to apply to browser logs at the end of every test.
-                           -- If it returns true, the test is failed.
-                           -- Can be used to fail tests if certain browser logs are found (for example, all 'LogSevere' logs).
-                           -- Defaults to @const False@.
+                           , wdSaveBrowserLogs :: MVar SaveLogSettings
                            , wdConfig :: W.WDConfig }
 
 -- | The type parameter represents the value inside the 'SpecWith', which should be

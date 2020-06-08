@@ -54,14 +54,13 @@ handleTestException session@(WdSession {wdOptions=(WdOptions {runRoot}), ..}) e 
         (\(e :: SomeException) -> putStrLn [i|Error: failed to create symlink on test exception: #{e}|])
 #endif
 
-saveSessionHistoryIfConfigured :: (HasCallStack) => WdSession -> IO ()
-saveSessionHistoryIfConfigured session@(WdSession {wdOptions=(WdOptions {saveSeleniumMessageHistory}), ..}) = do
+saveSeleniumMessages :: (HasCallStack) => WdSession -> IO ()
+saveSeleniumMessages session@(WdSession {..}) = do
   let resultsDir = getResultsDir session
   createDirectoryIfMissing True resultsDir
 
-  when (saveSeleniumMessageHistory `elem` [Always, OnException]) $ do
-    sessionMap <- readMVar wdSessionMap
-    forM_ (M.toList sessionMap) $ \(browser, sess) -> do
-      hist <- runWD sess getSessionHistory
-      withFile (resultsDir </> [i|#{browser}_selenium_messages.txt|]) WriteMode $ \h ->
-        forM_ hist $ hPrint h
+  sessionMap <- readMVar wdSessionMap
+  forM_ (M.toList sessionMap) $ \(browser, sess) -> do
+    hist <- runWD sess getSessionHistory
+    withFile (resultsDir </> [i|#{browser}_selenium_messages.txt|]) WriteMode $ \h ->
+      forM_ hist $ hPrint h

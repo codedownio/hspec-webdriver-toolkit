@@ -28,7 +28,6 @@ findFreePortInRange' retryPolicy (start, end) blacklist = retrying retryPolicy (
             tryOpenAndClosePort port = do
               sock <- socket AF_INET Stream 0
               setSocketOption sock ReuseAddr 1
-              let hints = defaultHints { addrFlags = [AI_NUMERICHOST], addrSocketType = Stream }
               let hostAddress = tupleToHostAddress (127, 0, 0, 1)
               bind sock (SockAddrInet port hostAddress)
               close sock
